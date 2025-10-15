@@ -1,7 +1,17 @@
 {
-	"library": {
-			"name": "React Bits for Webflow",
-			"components": ["./src/**/*.webflow.@(js|jsx|mjs|ts|tsx)"]
-	}
+  "library": {
+    "name": "Webflow Code Components",
+    "components": [
+      "./src/**/*.webflow.@(js|jsx|mjs|ts|tsx)"
+    ],
+    "description": "",
+    "id": "webflow-code-components"
+  },
+  "telemetry": {
+    "global": {
+      "allowTelemetry": true,
+      "lastPrompted": 1760550718846,
+      "version": "1.8.44"
+    }
+  }
 }
-

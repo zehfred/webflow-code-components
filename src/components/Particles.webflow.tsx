@@ -25,11 +25,23 @@ export default declareComponent(Particles, {
       min: 0,
       max: 2,
     }),
+    particleColors: props.Text({
+      name: 'Particle Colors',
+      defaultValue: '#ffffff,#ffffff,#ffffff',
+    }),
+    moveParticlesOnHover: props.Text({
+      name: 'Move On Hover',
+      defaultValue: '0',
+    }),
     particleHoverFactor: props.Number({
       name: 'Hover Factor',
       defaultValue: 1,
       min: 0,
       max: 5,
+    }),
+    alphaParticles: props.Text({
+      name: 'Alpha Particles',
+      defaultValue: '0',
     }),
     particleBaseSize: props.Number({
       name: 'Base Size',
@@ -48,6 +60,10 @@ export default declareComponent(Particles, {
       defaultValue: 20,
       min: 5,
       max: 50,
+    }),
+    disableRotation: props.Text({
+      name: 'Disable Rotation',
+      defaultValue: '0',
     }),
   },
 });

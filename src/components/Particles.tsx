@@ -7,14 +7,14 @@ interface ParticlesProps {
   particleCount?: number;
   particleSpread?: number;
   speed?: number;
-  particleColors?: string[];
-  moveParticlesOnHover?: boolean;
+  particleColors?: string | string[];
+  moveParticlesOnHover?: boolean | string;
   particleHoverFactor?: number;
-  alphaParticles?: boolean;
+  alphaParticles?: boolean | string;
   particleBaseSize?: number;
   sizeRandomness?: number;
   cameraDistance?: number;
-  disableRotation?: boolean;
+  disableRotation?: boolean | string;
   className?: string;
 }
 
@@ -115,6 +115,14 @@ const Particles: React.FC<ParticlesProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  // Parse string-based props from Webflow
+  const parsedMoveOnHover = typeof moveParticlesOnHover === 'string' ? moveParticlesOnHover === '1' : moveParticlesOnHover;
+  const parsedAlphaParticles = typeof alphaParticles === 'string' ? alphaParticles === '1' : alphaParticles;
+  const parsedDisableRotation = typeof disableRotation === 'string' ? disableRotation === '1' : disableRotation;
+  const parsedColors = typeof particleColors === 'string' 
+    ? particleColors.split(',').map(c => c.trim()).filter(Boolean)
+    : particleColors;
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -143,7 +151,7 @@ const Particles: React.FC<ParticlesProps> = ({
       mouseRef.current = { x, y };
     };
 
-    if (moveParticlesOnHover) {
+    if (parsedMoveOnHover) {
       container.addEventListener('mousemove', handleMouseMove);
     }
 
@@ -151,7 +159,7 @@ const Particles: React.FC<ParticlesProps> = ({
     const positions = new Float32Array(count * 3);
     const randoms = new Float32Array(count * 4);
     const colors = new Float32Array(count * 3);
-    const palette = particleColors && particleColors.length > 0 ? particleColors : defaultColors;
+    const palette = parsedColors && parsedColors.length > 0 ? parsedColors : defaultColors;
 
     for (let i = 0; i < count; i++) {
       let x: number, y: number, z: number, len: number;
@@ -182,7 +190,7 @@ const Particles: React.FC<ParticlesProps> = ({
         uSpread: { value: particleSpread },
         uBaseSize: { value: particleBaseSize },
         uSizeRandomness: { value: sizeRandomness },
-        uAlphaParticles: { value: alphaParticles ? 1 : 0 }
+        uAlphaParticles: { value: parsedAlphaParticles ? 1 : 0 }
       },
       transparent: true,
       depthTest: false
@@ -202,7 +210,7 @@ const Particles: React.FC<ParticlesProps> = ({
 
       program.uniforms.uTime.value = elapsed * 0.001;
 
-      if (moveParticlesOnHover) {
+      if (parsedMoveOnHover) {
         particles.position.x = -mouseRef.current.x * particleHoverFactor;
         particles.position.y = -mouseRef.current.y * particleHoverFactor;
       } else {
@@ -210,7 +218,7 @@ const Particles: React.FC<ParticlesProps> = ({
         particles.position.y = 0;
       }
 
-      if (!disableRotation) {
+      if (!parsedDisableRotation) {
         particles.rotation.x = Math.sin(elapsed * 0.0002) * 0.1;
         particles.rotation.y = Math.cos(elapsed * 0.0005) * 0.15;
         particles.rotation.z += 0.01 * speed;
@@ -223,7 +231,7 @@ const Particles: React.FC<ParticlesProps> = ({
 
     return () => {
       window.removeEventListener('resize', resize);
-      if (moveParticlesOnHover) {
+      if (parsedMoveOnHover) {
         container.removeEventListener('mousemove', handleMouseMove);
       }
       cancelAnimationFrame(animationFrameId);
@@ -236,6 +244,7 @@ const Particles: React.FC<ParticlesProps> = ({
     particleCount,
     particleSpread,
     speed,
+    particleColors,
     moveParticlesOnHover,
     particleHoverFactor,
     alphaParticles,
