@@ -1,0 +1,7 @@
+{
+	"library": {
+			"name": "React Bits for Webflow",
+			"components": ["./src/**/*.webflow.@(js|jsx|mjs|ts|tsx)"]
+	}
+}
+
