@@ -22,13 +22,8 @@
 
 .faq__item {
   border: 1px solid var(--faq-toggle-border-color, #e5e5e5);  /* Fallback: #e5e5e5 */
-  border-bottom: none;
   border-radius: var(--faq-border-radius, 0px);  /* Fallback: 0px */
   transition: background-color 0.2s ease;
-}
-
-.faq__item:last-child {
-  border-bottom: 1px solid var(--faq-toggle-border-color, #e5e5e5);  /* Fallback: #e5e5e5 */
 }
 
 /* ─────────────────────────────────────────────────────────────── */
@@ -79,10 +74,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 1.5rem;
+  height: 1.5rem;
+	margin-right: 1rem;
   transition: transform 0.3s ease;
-  color: currentColor;
+  color: var(--faq-chevron-color, #000000);
 }
 
 /* Icon on right (default) */
