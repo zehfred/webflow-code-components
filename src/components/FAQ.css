@@ -55,8 +55,9 @@
   background-color: var(--faq-toggle-hover-color, #f9f9f9);  /* Fallback: #f9f9f9 */
 }
 
-/* Allow Webflow styles to cascade to question element */
-.faq__trigger * {
+/* Allow Webflow styles to cascade to question element only (not icon) */
+.faq__trigger [data-faq-question],
+.faq__trigger [data-faq-question] * {
   font-family: var(--faq-question-font-family, inherit);  /* Fallback: inherit */
   font-size: var(--faq-question-font-size, inherit);  /* Fallback: inherit */
   font-weight: var(--faq-question-font-weight, inherit);  /* Fallback: inherit */

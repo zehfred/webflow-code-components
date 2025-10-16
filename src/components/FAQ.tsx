@@ -217,8 +217,11 @@ const FAQ = ({
                       questionClone.style.flex = '1';
                       questionClone.style.minWidth = '0';
 
-                      // Let CSS variables and .faq__trigger * selector handle all styling
-                      // This ensures --faq-question-color, --faq-question-font-size, etc. work properly
+                      // Clear inline font-weight to allow CSS variable to work
+                      questionClone.style.fontWeight = '';
+
+                      // Let CSS variables and .faq__trigger [data-faq-question] selector handle all styling
+                      // This ensures --faq-question-color, --faq-question-font-size, --faq-question-font-weight, etc. work properly
 
                       // Insert cloned question before icon (so icon stays visually on right)
                       const iconElement = el.querySelector('.faq__icon');
@@ -260,8 +263,13 @@ const FAQ = ({
                     if (el && item.answerElement) {
                       // Clear previous content
                       el.innerHTML = '';
-                      // Insert cloned answer directly
-                      el.appendChild(item.answerElement.cloneNode(true));
+                      // Create wrapper for answer with padding class
+                      const answerWrapper = document.createElement('div');
+                      answerWrapper.className = 'faq__answer';
+                      // Insert cloned answer into wrapper
+                      answerWrapper.appendChild(item.answerElement.cloneNode(true));
+                      // Insert wrapper into content
+                      el.appendChild(answerWrapper);
                       // Measure height after insertion
                       measureHeight(item.id, el);
                     }
