@@ -370,10 +370,10 @@ const componentRegistry = [
         name: 'Hover Color',
         defaultValue: '#f9f9f9',
       },
-      textColor: {
-        type: 'color',
-        name: 'Text Color',
-        defaultValue: '#000000',
+      borderRadius: {
+        type: 'text',
+        name: 'Border Radius',
+        defaultValue: '0px',
       },
     },
   },

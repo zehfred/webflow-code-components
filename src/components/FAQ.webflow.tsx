@@ -78,7 +78,7 @@ interface FAQWebflowProps {
   children?: any;
   /** Accordion type: single or multiple items open */
   type?: 'single' | 'multiple';
-  /** Which item is open by default (0-based index) */
+  /** Which item is open by default (0 = none, 1 = first, 2 = second, etc.) */
   defaultOpenIndex?: number;
   /** Position of the expand/collapse icon */
   iconPosition?: 'left' | 'right';
@@ -90,8 +90,8 @@ interface FAQWebflowProps {
   backgroundColor?: string;
   /** Background color on hover */
   hoverColor?: string;
-  /** Text color */
-  textColor?: string;
+  /** Border radius of accordion items */
+  borderRadius?: string;
 }
 
 const FAQWebflow = ({
@@ -103,7 +103,7 @@ const FAQWebflow = ({
   borderColor = '#e5e5e5',
   backgroundColor = '#ffffff',
   hoverColor = '#f9f9f9',
-  textColor = '#000000'
+  borderRadius = '0px'
 }: FAQWebflowProps) => {
   // Parse string values from Webflow
   const parsedType = (typeof type === 'string' ? type : 'single') as 'single' | 'multiple';
@@ -124,7 +124,7 @@ const FAQWebflow = ({
       borderColor={borderColor}
       backgroundColor={backgroundColor}
       hoverColor={hoverColor}
-      textColor={textColor}
+      borderRadius={borderRadius}
     >
       {children}
     </FAQ>
@@ -156,7 +156,7 @@ export default declareComponent(FAQWebflow, {
       min: 0,
       max: 100,
       decimals: 0,
-      tooltip: 'Index (0-based) of which item should be open by default. Only applies when type is "single".'
+      tooltip: 'Set to 0 for none open, 1 for first item, 2 for second item, etc. Only applies when type is "single".'
     }),
 
     iconPosition: props.Text({
@@ -197,11 +197,11 @@ export default declareComponent(FAQWebflow, {
       tooltip: 'Background color when hovering over an accordion item'
     }),
 
-    textColor: props.Text({
-      name: 'Text Color',
-      defaultValue: '#000000',
+    borderRadius: props.Text({
+      name: 'Border Radius',
+      defaultValue: '0px',
       group: 'Style',
-      tooltip: 'Color of the question and answer text'
+      tooltip: 'Border radius of accordion items (e.g., 0px, 8px, 1rem)'
     })
   },
 

@@ -40,9 +40,6 @@
   border: none;
   cursor: pointer;
   text-align: left;
-  font-size: 16px;
-  font-weight: 500;
-  color: #000;
   transition: background-color 0.2s ease;
   appearance: none;
   -webkit-appearance: none;
@@ -53,14 +50,9 @@
   background-color: #f9f9f9;
 }
 
-.faq__trigger:focus {
-  outline: 2px solid #4f46e5;
-  outline-offset: -2px;
-}
-
+.faq__trigger:focus,
 .faq__trigger:focus-visible {
-  outline: 2px solid #4f46e5;
-  outline-offset: -2px;
+  outline: none;
 }
 
 /* Icon positioning */
@@ -110,9 +102,6 @@
 
 .faq__answer {
   padding: 0 16px 16px 16px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #666;
 }
 
 /* ─────────────────────────────────────────────────────────────── */

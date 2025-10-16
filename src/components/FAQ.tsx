@@ -10,7 +10,7 @@ export interface FAQItem {
 export interface FAQProps {
   /** Type of accordion behavior */
   type?: 'single' | 'multiple';
-  /** Index of item to open by default (0-based) */
+  /** Index of item to open by default (0 = none, 1 = first, 2 = second, etc.) */
   defaultOpenIndex?: number;
   /** Position of expand/collapse icon */
   iconPosition?: 'left' | 'right';
@@ -22,8 +22,8 @@ export interface FAQProps {
   backgroundColor?: string;
   /** Hover background color */
   hoverColor?: string;
-  /** Text color for question */
-  textColor?: string;
+  /** Border radius */
+  borderRadius?: string;
   /** Children slot for Collection List */
   children?: any;
 }
@@ -36,7 +36,7 @@ const FAQ = ({
   borderColor = '#e5e5e5',
   backgroundColor = '#ffffff',
   hoverColor = '#f9f9f9',
-  textColor = '#000000',
+  borderRadius = '0px',
   children
 }: FAQProps) => {
   const [items, setItems] = useState<FAQItem[]>([]);
@@ -103,8 +103,10 @@ const FAQ = ({
       if (faqItems.length > 0) {
         setItems(faqItems);
 
-        if (type === 'single' && defaultOpenIndex >= 0 && defaultOpenIndex < faqItems.length) {
-          setOpenItems(new Set([faqItems[defaultOpenIndex].id]));
+        // defaultOpenIndex: 0 = none, 1 = first item, 2 = second item, etc.
+        const itemIndex = defaultOpenIndex - 1;
+        if (type === 'single' && itemIndex >= 0 && itemIndex < faqItems.length) {
+          setOpenItems(new Set([faqItems[itemIndex].id]));
         }
       }
     };
@@ -194,7 +196,8 @@ const FAQ = ({
                 className={`faq__item ${isOpen ? 'faq__item--open' : ''}`}
                 style={{
                   borderColor,
-                  backgroundColor
+                  backgroundColor,
+                  borderRadius
                 }}
               >
                 {/* Question / Trigger */}
@@ -204,9 +207,6 @@ const FAQ = ({
                   onKeyDown={(e) => handleKeyDown(e, item.id)}
                   aria-expanded={isOpen}
                   aria-controls={`${item.id}-content`}
-                  style={{
-                    color: textColor
-                  }}
                 >
                   <span className="faq__icon" aria-hidden="true">
                     <svg
@@ -239,9 +239,6 @@ const FAQ = ({
                   <div
                     className="faq__answer"
                     ref={(el) => measureHeight(item.id, el)}
-                    style={{
-                      color: textColor
-                    }}
                   >
                     {item.answer}
                   </div>
