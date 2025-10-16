@@ -2,6 +2,31 @@
 /* FAQ Component Styles */
 /* ═══════════════════════════════════════════════════════════════ */
 
+/* CSS Variables for customization */
+:host {
+  /* Toggle/Button Styling */
+  --faq-toggle-border-color: #e5e5e5;
+  --faq-toggle-hover-color: #f9f9f9;
+
+  /* Layout */
+  --faq-item-gap: 0px;
+
+  /* Question Styling */
+  --faq-question-color: #000000;
+  --faq-question-font-size: 16px;
+  --faq-question-font-family: inherit;
+  --faq-question-padding: 16px;
+
+  /* Answer Styling */
+  --faq-answer-color: #000000;
+  --faq-answer-font-size: 16px;
+  --faq-answer-font-family: inherit;
+  --faq-answer-padding: 0 16px 16px 16px;
+
+  /* Border Radius */
+  --faq-border-radius: 0px;
+}
+
 .faq {
   width: 100%;
 }
@@ -9,7 +34,7 @@
 .faq__list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--faq-item-gap, 0px);
 }
 
 /* ─────────────────────────────────────────────────────────────── */
@@ -17,13 +42,14 @@
 /* ─────────────────────────────────────────────────────────────── */
 
 .faq__item {
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--faq-toggle-border-color, #e5e5e5);
   border-bottom: none;
+  border-radius: var(--faq-border-radius, 0px);
   transition: background-color 0.2s ease;
 }
 
 .faq__item:last-child {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--faq-toggle-border-color, #e5e5e5);
 }
 
 /* ─────────────────────────────────────────────────────────────── */
@@ -43,22 +69,23 @@
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  overflow: hidden;
 }
 
 .faq__trigger:hover {
-  background-color: #f9f9f9;
+  background-color: var(--faq-toggle-hover-color, #f9f9f9);
 }
 
 /* Allow Webflow styles to cascade to question element */
 .faq__trigger * {
-  font-family: inherit;
-  font-size: inherit;
+  font-family: var(--faq-question-font-family, inherit);
+  font-size: var(--faq-question-font-size, inherit);
   font-weight: inherit;
-  color: inherit;
+  color: var(--faq-question-color, inherit);
   line-height: inherit;
   letter-spacing: inherit;
   margin: 0;
-  padding: 0;
+  padding: var(--faq-question-padding, 0);
 }
 
 .faq__trigger:focus,
@@ -113,11 +140,13 @@
 
 /* Allow Webflow styles to cascade to answer element and rich text */
 .faq__content * {
-  font-family: inherit;
+  font-family: var(--faq-answer-font-family, inherit);
+  color: var(--faq-answer-color, inherit);
+  font-size: var(--faq-answer-font-size, inherit);
 }
 
 .faq__answer {
-  /* Styling is controlled by Webflow classes on the answer element */
+  padding: var(--faq-answer-padding, 0 16px 16px 16px);
 }
 
 /* ─────────────────────────────────────────────────────────────── */

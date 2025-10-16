@@ -44,6 +44,11 @@ const FAQ = ({
   const slotRef = useRef(null);
   const contentHeightsRef = useRef<Record<string, number>>({});
 
+  // Inject CSS variables when component mounts or props change
+  useEffect(() => {
+    injectCSSVariables();
+  }, [borderColor, hoverColor, borderRadius]);
+
   // Extract FAQ items from slotted Collection List
   useEffect(() => {
     const extractFAQItems = () => {
@@ -176,14 +181,56 @@ const FAQ = ({
     }
   };
 
-  // Copy all computed styles from original element to clone
-  // This preserves Webflow class styling when moving from light DOM to Shadow DOM
+  // Properties that are controlled by CSS variables - skip these
+  const cssVariableProperties = new Set([
+    'color',
+    'font-size',
+    'font-family',
+    'padding',
+    'padding-top',
+    'padding-right',
+    'padding-bottom',
+    'padding-left',
+    'border-color',
+    'background-color'
+  ]);
+
+  // Inject CSS variables into Shadow DOM host element
+  // This allows CSS variables defined in component CSS to be used
+  const injectCSSVariables = () => {
+    if (typeof window === 'undefined') return;
+
+    // Get the shadow root host element
+    let hostElement: HTMLElement | null = null;
+
+    // Try to find the code island element
+    const codeIsland = document.querySelector('code-island');
+    if (codeIsland?.shadowRoot) {
+      const faqDiv = codeIsland.shadowRoot.querySelector('.faq');
+      if (faqDiv) {
+        hostElement = codeIsland as HTMLElement;
+      }
+    }
+
+    if (hostElement) {
+      hostElement.style.setProperty('--faq-toggle-border-color', borderColor);
+      hostElement.style.setProperty('--faq-toggle-hover-color', hoverColor);
+      hostElement.style.setProperty('--faq-border-radius', borderRadius);
+    }
+  };
+
+  // Copy only selective computed styles (not handled by CSS variables)
+  // This is much faster than copying all 200+ properties
   const copyComputedStyles = (original: Element, clone: HTMLElement) => {
     const computed = window.getComputedStyle(original);
 
-    // Copy all computed CSS properties as inline styles
+    // Only copy properties not handled by CSS variables
     for (let i = 0; i < computed.length; i++) {
       const prop = computed[i];
+
+      // Skip properties controlled by CSS variables
+      if (cssVariableProperties.has(prop)) continue;
+
       const value = computed.getPropertyValue(prop);
       const priority = computed.getPropertyPriority(prop);
       clone.style.setProperty(prop, value, priority);
