@@ -355,26 +355,6 @@ const componentRegistry = [
         max: 2,
         step: 0.1,
       },
-      borderColor: {
-        type: 'color',
-        name: 'Border Color',
-        defaultValue: '#e5e5e5',
-      },
-      backgroundColor: {
-        type: 'color',
-        name: 'Background Color',
-        defaultValue: '#ffffff',
-      },
-      hoverColor: {
-        type: 'color',
-        name: 'Hover Color',
-        defaultValue: '#f9f9f9',
-      },
-      borderRadius: {
-        type: 'text',
-        name: 'Border Radius',
-        defaultValue: '0px',
-      },
     },
   },
   // Add more components here as they are created

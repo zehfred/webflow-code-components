@@ -16,14 +16,6 @@ export interface FAQProps {
   iconPosition?: 'left' | 'right';
   /** Animation duration in seconds */
   animationDuration?: number;
-  /** Border color */
-  borderColor?: string;
-  /** Background color */
-  backgroundColor?: string;
-  /** Hover background color */
-  hoverColor?: string;
-  /** Border radius */
-  borderRadius?: string;
   /** Children slot for Collection List */
   children?: any;
 }
@@ -33,10 +25,6 @@ const FAQ = ({
   defaultOpenIndex = 0,
   iconPosition = 'right',
   animationDuration = 0.3,
-  borderColor = '#e5e5e5',
-  backgroundColor = '#ffffff',
-  hoverColor = '#f9f9f9',
-  borderRadius = '0px',
   children
 }: FAQProps) => {
   const [items, setItems] = useState<FAQItem[]>([]);
@@ -44,10 +32,6 @@ const FAQ = ({
   const slotRef = useRef(null);
   const contentHeightsRef = useRef<Record<string, number>>({});
 
-  // Inject CSS variables when component mounts or props change
-  useEffect(() => {
-    injectCSSVariables();
-  }, [borderColor, hoverColor, borderRadius]);
 
   // Extract FAQ items from slotted Collection List
   useEffect(() => {
@@ -195,29 +179,6 @@ const FAQ = ({
     'background-color'
   ]);
 
-  // Inject CSS variables into Shadow DOM host element
-  // This allows CSS variables defined in component CSS to be used
-  const injectCSSVariables = () => {
-    if (typeof window === 'undefined') return;
-
-    // Get the shadow root host element
-    let hostElement: HTMLElement | null = null;
-
-    // Try to find the code island element
-    const codeIsland = document.querySelector('code-island');
-    if (codeIsland?.shadowRoot) {
-      const faqDiv = codeIsland.shadowRoot.querySelector('.faq');
-      if (faqDiv) {
-        hostElement = codeIsland as HTMLElement;
-      }
-    }
-
-    if (hostElement) {
-      hostElement.style.setProperty('--faq-toggle-border-color', borderColor);
-      hostElement.style.setProperty('--faq-toggle-hover-color', hoverColor);
-      hostElement.style.setProperty('--faq-border-radius', borderRadius);
-    }
-  };
 
   // Copy only selective computed styles (not handled by CSS variables)
   // This is much faster than copying all 200+ properties
@@ -275,11 +236,6 @@ const FAQ = ({
               <div
                 key={item.id}
                 className={`faq__item ${isOpen ? 'faq__item--open' : ''}`}
-                style={{
-                  borderColor,
-                  backgroundColor,
-                  borderRadius
-                }}
               >
                 {/* Question / Trigger */}
                 <button
@@ -295,8 +251,13 @@ const FAQ = ({
                       if (existingQuestion) {
                         existingQuestion.remove();
                       }
-                      // Insert cloned question directly as child
-                      el.appendChild(item.questionElement.cloneNode(true));
+                      // Insert cloned question before icon (so icon stays visually on right)
+                      const iconElement = el.querySelector('.faq__icon');
+                      if (iconElement) {
+                        el.insertBefore(item.questionElement.cloneNode(true), iconElement);
+                      } else {
+                        el.appendChild(item.questionElement.cloneNode(true));
+                      }
                     }
                   }}
                 >

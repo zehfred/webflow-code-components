@@ -125,14 +125,6 @@ interface FAQWebflowProps {
   iconPosition?: 'left' | 'right';
   /** Animation speed in seconds */
   animationDuration?: number;
-  /** Border color of accordion items */
-  borderColor?: string;
-  /** Background color of accordion items */
-  backgroundColor?: string;
-  /** Background color on hover */
-  hoverColor?: string;
-  /** Border radius of accordion items */
-  borderRadius?: string;
 }
 
 const FAQWebflow = ({
@@ -140,11 +132,7 @@ const FAQWebflow = ({
   type = 'single',
   defaultOpenIndex = 0,
   iconPosition = 'right',
-  animationDuration = 0.3,
-  borderColor = '#e5e5e5',
-  backgroundColor = '#ffffff',
-  hoverColor = '#f9f9f9',
-  borderRadius = '0px'
+  animationDuration = 0.3
 }: FAQWebflowProps) => {
   // Parse string values from Webflow
   const parsedType = (typeof type === 'string' ? type : 'single') as 'single' | 'multiple';
@@ -162,10 +150,6 @@ const FAQWebflow = ({
       defaultOpenIndex={parsedDefaultIndex}
       iconPosition={parsedIcon}
       animationDuration={parsedDuration}
-      borderColor={borderColor}
-      backgroundColor={backgroundColor}
-      hoverColor={hoverColor}
-      borderRadius={borderRadius}
     >
       {children}
     </FAQ>
@@ -215,34 +199,6 @@ export default declareComponent(FAQWebflow, {
       max: 2,
       decimals: 1,
       tooltip: 'Duration of open/close animation in seconds (lower = faster)'
-    }),
-
-    borderColor: props.Text({
-      name: 'Border Color',
-      defaultValue: '#e5e5e5',
-      group: 'Style',
-      tooltip: 'Color of the borders around each accordion item (e.g., #e5e5e5, rgba(0,0,0,0.1))'
-    }),
-
-    backgroundColor: props.Text({
-      name: 'Background Color',
-      defaultValue: '#ffffff',
-      group: 'Style',
-      tooltip: 'Background color of accordion items (e.g., #ffffff, transparent)'
-    }),
-
-    hoverColor: props.Text({
-      name: 'Hover Background Color',
-      defaultValue: '#f9f9f9',
-      group: 'Style',
-      tooltip: 'Background color when hovering over an accordion item'
-    }),
-
-    borderRadius: props.Text({
-      name: 'Border Radius',
-      defaultValue: '0px',
-      group: 'Style',
-      tooltip: 'Border radius of accordion items (e.g., 0px, 8px, 1rem)'
     })
   },
 
