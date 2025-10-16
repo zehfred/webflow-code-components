@@ -212,6 +212,17 @@ const FAQ = ({
                   onKeyDown={(e) => handleKeyDown(e, item.id)}
                   aria-expanded={isOpen}
                   aria-controls={`${item.id}-content`}
+                  ref={(el) => {
+                    if (el && item.questionElement) {
+                      // Remove any previously inserted question
+                      const existingQuestion = el.querySelector('[data-faq-question]');
+                      if (existingQuestion) {
+                        existingQuestion.remove();
+                      }
+                      // Insert cloned question directly as child
+                      el.appendChild(item.questionElement.cloneNode(true));
+                    }
+                  }}
                 >
                   <span className="faq__icon" aria-hidden="true">
                     <svg
@@ -227,14 +238,6 @@ const FAQ = ({
                       <polyline points="6 9 10 13 14 9"></polyline>
                     </svg>
                   </span>
-                  <span
-                    ref={(el) => {
-                      if (el && item.questionElement) {
-                        el.innerHTML = '';
-                        el.appendChild(item.questionElement.cloneNode(true));
-                      }
-                    }}
-                  />
                 </button>
 
                 {/* Answer / Content */}
@@ -247,18 +250,17 @@ const FAQ = ({
                   }}
                   role="region"
                   aria-labelledby={item.id}
-                >
-                  <div
-                    className="faq__answer"
-                    ref={(el) => {
-                      if (el && item.answerElement) {
-                        el.innerHTML = '';
-                        el.appendChild(item.answerElement.cloneNode(true));
-                        measureHeight(item.id, el);
-                      }
-                    }}
-                  />
-                </div>
+                  ref={(el) => {
+                    if (el && item.answerElement) {
+                      // Clear previous content
+                      el.innerHTML = '';
+                      // Insert cloned answer directly
+                      el.appendChild(item.answerElement.cloneNode(true));
+                      // Measure height after insertion
+                      measureHeight(item.id, el);
+                    }
+                  }}
+                />
               </div>
             );
           })}

@@ -49,6 +49,18 @@
   background-color: #f9f9f9;
 }
 
+/* Allow Webflow styles to cascade to question element */
+.faq__trigger * {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  margin: 0;
+  padding: 0;
+}
+
 .faq__trigger:focus,
 .faq__trigger:focus-visible {
   outline: none;
@@ -99,8 +111,13 @@
   transition: max-height 0.3s ease;
 }
 
+/* Allow Webflow styles to cascade to answer element and rich text */
+.faq__content * {
+  font-family: inherit;
+}
+
 .faq__answer {
-  /* Padding is controlled by Webflow styling on the answer element */
+  /* Styling is controlled by Webflow classes on the answer element */
 }
 
 /* ─────────────────────────────────────────────────────────────── */
