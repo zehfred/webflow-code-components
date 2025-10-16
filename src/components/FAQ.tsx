@@ -84,9 +84,14 @@ const FAQ = ({
             const answerEl = container.querySelector('[data-faq-answer]');
 
             if (answerEl) {
-              // Clone the actual DOM elements to preserve all HTML, classes, and styling
-              const questionClone = questionEl.cloneNode(true) as Node;
-              const answerClone = answerEl.cloneNode(true) as Node;
+              // Clone the actual DOM elements to preserve all HTML and structure
+              const questionClone = questionEl.cloneNode(true) as HTMLElement;
+              const answerClone = answerEl.cloneNode(true) as HTMLElement;
+
+              // Copy all computed styles from original elements to preserve Webflow styling
+              // This is necessary because we're moving elements from light DOM to Shadow DOM
+              copyComputedStyles(questionEl, questionClone);
+              copyComputedStyles(answerEl, answerClone);
 
               // Verify clones have content
               if (questionClone.textContent?.trim() && answerClone.textContent?.trim()) {
@@ -168,6 +173,30 @@ const FAQ = ({
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
       toggleItem(itemId);
+    }
+  };
+
+  // Copy all computed styles from original element to clone
+  // This preserves Webflow class styling when moving from light DOM to Shadow DOM
+  const copyComputedStyles = (original: Element, clone: HTMLElement) => {
+    const computed = window.getComputedStyle(original);
+
+    // Copy all computed CSS properties as inline styles
+    for (let i = 0; i < computed.length; i++) {
+      const prop = computed[i];
+      const value = computed.getPropertyValue(prop);
+      const priority = computed.getPropertyPriority(prop);
+      clone.style.setProperty(prop, value, priority);
+    }
+
+    // Recursively copy styles for all children (important for rich text)
+    const children = Array.from(original.children);
+    for (let i = 0; i < children.length; i++) {
+      const originalChild = children[i];
+      const cloneChild = clone.children[i] as HTMLElement;
+      if (cloneChild) {
+        copyComputedStyles(originalChild, cloneChild);
+      }
     }
   };
 
