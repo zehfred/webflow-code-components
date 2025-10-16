@@ -4,6 +4,7 @@ import DotGrid from './components/DotGrid.tsx';
 import Particles from './components/Particles.tsx';
 import MagnetLines from './components/MagnetLines.tsx';
 import GridMotion from './components/GridMotion.tsx';
+import FAQ from './components/FAQ.tsx';
 
 // Component Registry - Add new components here
 const componentRegistry = [
@@ -321,6 +322,61 @@ const componentRegistry = [
       },
     },
   },
+  {
+    name: 'FAQ',
+    component: FAQ,
+    wrapperStyle: { width: '100%', maxWidth: '600px' },
+    props: {
+      type: {
+        type: 'variant',
+        name: 'Accordion Type',
+        defaultValue: 'single',
+        options: ['single', 'multiple'],
+      },
+      defaultOpenIndex: {
+        type: 'number',
+        name: 'Default Open Item',
+        defaultValue: 0,
+        min: 0,
+        max: 10,
+        step: 1,
+      },
+      iconPosition: {
+        type: 'variant',
+        name: 'Icon Position',
+        defaultValue: 'right',
+        options: ['left', 'right'],
+      },
+      animationDuration: {
+        type: 'number',
+        name: 'Animation Duration',
+        defaultValue: 0.3,
+        min: 0.1,
+        max: 2,
+        step: 0.1,
+      },
+      borderColor: {
+        type: 'color',
+        name: 'Border Color',
+        defaultValue: '#e5e5e5',
+      },
+      backgroundColor: {
+        type: 'color',
+        name: 'Background Color',
+        defaultValue: '#ffffff',
+      },
+      hoverColor: {
+        type: 'color',
+        name: 'Hover Color',
+        defaultValue: '#f9f9f9',
+      },
+      textColor: {
+        type: 'color',
+        name: 'Text Color',
+        defaultValue: '#000000',
+      },
+    },
+  },
   // Add more components here as they are created
 ];
 
@@ -525,18 +581,40 @@ const ColorArrayControl = ({ label, value, onChange }) => {
   );
 };
 
+// Sample FAQ data for testing
+const sampleFAQItems = (
+  <div>
+    <div>
+      <div data-faq-question>What is your return policy?</div>
+      <div data-faq-answer>We offer a 30-day return policy on all items. If you're not satisfied with your purchase, simply return the item in its original condition for a full refund.</div>
+    </div>
+    <div>
+      <div data-faq-question>Do you offer international shipping?</div>
+      <div data-faq-answer>Yes, we ship to most countries worldwide. Shipping costs and delivery times vary depending on the destination. You can calculate shipping costs at checkout.</div>
+    </div>
+    <div>
+      <div data-faq-question>How long does delivery take?</div>
+      <div data-faq-answer>Standard shipping typically takes 5-7 business days. Expedited shipping options are available for an additional fee.</div>
+    </div>
+    <div>
+      <div data-faq-question>Can I cancel my order?</div>
+      <div data-faq-answer>Orders can be cancelled within 24 hours of placement. After 24 hours, the order enters the fulfillment process and cannot be cancelled.</div>
+    </div>
+  </div>
+);
+
 // Component Showcase Item
 const ComponentShowcase = ({ config }) => {
   const { name, component: Component, props: propDefs, wrapperStyle } = config;
-  
+
   // Initialize state with default values
   const initialState = Object.entries(propDefs).reduce((acc, [key, def]) => {
     acc[key] = def.defaultValue;
     return acc;
   }, {});
-  
+
   const [propValues, setPropValues] = useState(initialState);
-  
+
   const updateProp = (propName, value) => {
     setPropValues((prev) => ({ ...prev, [propName]: value }));
   };
@@ -567,7 +645,11 @@ const ComponentShowcase = ({ config }) => {
         }}
       >
         <div style={wrapperStyle || { width: '100%' }}>
-          <Component {...propValues} />
+          {name === 'FAQ' ? (
+            <Component {...propValues}>{sampleFAQItems}</Component>
+          ) : (
+            <Component {...propValues} />
+          )}
         </div>
       </div>
       
