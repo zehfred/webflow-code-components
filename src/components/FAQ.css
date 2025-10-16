@@ -59,7 +59,7 @@
 .faq__trigger * {
   font-family: var(--faq-question-font-family, inherit);  /* Fallback: inherit */
   font-size: var(--faq-question-font-size, inherit);  /* Fallback: inherit */
-  font-weight: inherit;
+  font-weight: var(--faq-question-font-weight, inherit);  /* Fallback: inherit */
   color: var(--faq-question-color, #000000);  /* Fallback: #000000 */
   line-height: inherit;
   letter-spacing: inherit;
