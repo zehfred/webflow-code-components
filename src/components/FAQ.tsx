@@ -165,8 +165,9 @@ const FAQ = ({
     }
   };
 
-  // Properties that are controlled by CSS variables - skip these
-  const cssVariableProperties = new Set([
+  // Properties that should not be copied to avoid breaking layout or being handled by CSS variables
+  const propertiesToSkip = new Set([
+    // CSS variables control these
     'color',
     'font-size',
     'font-family',
@@ -176,7 +177,25 @@ const FAQ = ({
     'padding-bottom',
     'padding-left',
     'border-color',
-    'background-color'
+    'background-color',
+    // Layout-breaking properties
+    'display',
+    'width',
+    'max-width',
+    'min-width',
+    'height',
+    'max-height',
+    'min-height',
+    'flex',
+    'flex-grow',
+    'flex-shrink',
+    'flex-basis',
+    'position',
+    'margin',
+    'margin-top',
+    'margin-right',
+    'margin-bottom',
+    'margin-left'
   ]);
 
 
@@ -185,12 +204,12 @@ const FAQ = ({
   const copyComputedStyles = (original: Element, clone: HTMLElement) => {
     const computed = window.getComputedStyle(original);
 
-    // Only copy properties not handled by CSS variables
+    // Only copy properties not handled by CSS variables or that break layout
     for (let i = 0; i < computed.length; i++) {
       const prop = computed[i];
 
-      // Skip properties controlled by CSS variables
-      if (cssVariableProperties.has(prop)) continue;
+      // Skip properties we don't want to copy
+      if (propertiesToSkip.has(prop)) continue;
 
       const value = computed.getPropertyValue(prop);
       const priority = computed.getPropertyPriority(prop);
@@ -251,12 +270,21 @@ const FAQ = ({
                       if (existingQuestion) {
                         existingQuestion.remove();
                       }
+
+                      // Clone the question element
+                      const questionClone = item.questionElement.cloneNode(true) as HTMLElement;
+
+                      // Force layout styles to prevent breaking flex layout
+                      questionClone.style.display = 'inline-block';
+                      questionClone.style.flex = '1';
+                      questionClone.style.minWidth = '0';
+
                       // Insert cloned question before icon (so icon stays visually on right)
                       const iconElement = el.querySelector('.faq__icon');
                       if (iconElement) {
-                        el.insertBefore(item.questionElement.cloneNode(true), iconElement);
+                        el.insertBefore(questionClone, iconElement);
                       } else {
-                        el.appendChild(item.questionElement.cloneNode(true));
+                        el.appendChild(questionClone);
                       }
                     }
                   }}

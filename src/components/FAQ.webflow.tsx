@@ -71,45 +71,31 @@ import './FAQ.css';
  * ✓ Respects prefers-reduced-motion
  *
  * ═══════════════════════════════════════════════════════════════
- * ADVANCED: CUSTOMIZE WITH CSS VARIABLES
+ * CUSTOMIZE WITH CSS VARIABLES (Webflow Variables Tool)
  * ═══════════════════════════════════════════════════════════════
  *
- * For advanced customization beyond Webflow's component settings,
- * you can override CSS variables. Add this to Webflow:
+ * The FAQ component uses CSS Variables for all styling. Set them in Webflow:
  *
- * Project Settings → Custom Code → Inside <head> tag
+ * 1. Open your Webflow Project Settings
+ * 2. Go to Variables (in the left menu)
+ * 3. Create new variables with these names:
  *
- * <style>
- * code-island {
- *   --faq-toggle-border-color: #000;
- *   --faq-toggle-hover-color: #f0f0f0;
- *   --faq-item-gap: 8px;
- *   --faq-question-color: #1a1a1a;
- *   --faq-question-font-size: 18px;
- *   --faq-question-font-family: 'Inter', sans-serif;
- *   --faq-question-padding: 20px;
- *   --faq-answer-color: #666;
- *   --faq-answer-font-size: 16px;
- *   --faq-answer-font-family: 'Inter', sans-serif;
- *   --faq-answer-padding: 0 20px 20px 20px;
- *   --faq-border-radius: 8px;
- * }
- * </style>
+ * --faq-toggle-border-color      (e.g., #000000)
+ * --faq-toggle-hover-color       (e.g., #f0f0f0)
+ * --faq-item-gap                 (e.g., 8px)
+ * --faq-question-color           (e.g., #1a1a1a)
+ * --faq-question-font-size       (e.g., 18px)
+ * --faq-question-font-family     (e.g., 'Inter', sans-serif)
+ * --faq-question-padding         (e.g., 20px)
+ * --faq-answer-color             (e.g., #666666)
+ * --faq-answer-font-size         (e.g., 16px)
+ * --faq-answer-font-family       (e.g., 'Inter', sans-serif)
+ * --faq-answer-padding           (e.g., 0 20px 20px 20px)
+ * --faq-border-radius            (e.g., 8px)
  *
- * Available CSS Variables:
- * ───────────────────────
- * --faq-toggle-border-color      Border color of accordion toggles
- * --faq-toggle-hover-color       Background color on toggle hover
- * --faq-item-gap                 Spacing between FAQ items
- * --faq-question-color           Question text color
- * --faq-question-font-size       Question font size
- * --faq-question-font-family     Question font family
- * --faq-question-padding         Question padding
- * --faq-answer-color             Answer text color
- * --faq-answer-font-size         Answer font size
- * --faq-answer-font-family       Answer font family
- * --faq-answer-padding           Answer padding
- * --faq-border-radius            Border radius of items
+ * The component will automatically inherit these values from Webflow's
+ * CSS variables, which are set in the :root scope and inherited by
+ * the Shadow DOM component.
  *
  * ═══════════════════════════════════════════════════════════════
  */
