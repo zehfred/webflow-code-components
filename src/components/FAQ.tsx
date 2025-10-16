@@ -50,57 +50,50 @@ const FAQ = ({
       if (!slotRef.current) return;
 
       const faqItems: FAQItem[] = [];
+      let searchContainer: HTMLElement | null = null;
 
-      // Try to find the slot element
+      // Try to find the slot element for Shadow DOM
       let slotElement = slotRef.current.querySelector('slot');
 
       if (slotElement) {
         // Shadow DOM: get assigned elements from the slot
         const assignedElements = (slotElement as any).assignedElements?.({ flatten: true }) || [];
 
-        assignedElements.forEach((element: any, index: number) => {
-          // Look for data-faq-question and data-faq-answer in the element and its children
-          const questionEl = element.querySelector('[data-faq-question]') ||
-                           (element.getAttribute('data-faq-question') ? element : null);
-          const answerEl = element.querySelector('[data-faq-answer]') ||
-                         (element.getAttribute('data-faq-answer') ? element : null);
-
-          // Both question and answer must exist for a valid FAQ item
-          if (questionEl && answerEl) {
-            const question = questionEl?.textContent?.trim() || '';
-            const answer = answerEl?.textContent?.trim() || '';
-
-            if (question && answer) {
-              faqItems.push({
-                id: `faq-item-${index}`,
-                question,
-                answer
-              });
-            }
-          }
-        });
+        // Find the root container (usually the w-dyn-list)
+        if (assignedElements.length > 0) {
+          searchContainer = assignedElements[0];
+        }
       } else {
-        // Regular DOM: query directly from container's children
-        const children = slotRef.current.children;
+        // Regular DOM: use the slot ref container
+        searchContainer = slotRef.current;
+      }
 
-        Array.from(children).forEach((child: any, index: number) => {
-          // Look for question and answer attributes
-          const questionEl = (child as HTMLElement).querySelector('[data-faq-question]') ||
-                           (child.getAttribute('data-faq-question') ? child : null);
-          const answerEl = (child as HTMLElement).querySelector('[data-faq-answer]') ||
-                         (child.getAttribute('data-faq-answer') ? child : null);
+      if (searchContainer) {
+        // Find ALL question elements
+        const questionElements = searchContainer.querySelectorAll('[data-faq-question]');
 
-          // Both question and answer must exist for a valid FAQ item
-          if (questionEl && answerEl) {
-            const question = questionEl?.textContent?.trim() || '';
-            const answer = answerEl?.textContent?.trim() || '';
+        questionElements.forEach((questionEl: any, index: number) => {
+          // Find the closest container that wraps this question and an answer
+          // This handles nested structures like Webflow's w-dyn-item
+          let container = questionEl.closest('[role="listitem"]') ||
+                         questionEl.parentElement?.parentElement ||
+                         questionEl.parentElement;
 
-            if (question && answer) {
-              faqItems.push({
-                id: `faq-item-${index}`,
-                question,
-                answer
-              });
+          if (container) {
+            // Find the answer within this container
+            const answerEl = container.querySelector('[data-faq-answer]');
+
+            if (answerEl) {
+              const question = questionEl.textContent?.trim() || '';
+              const answer = answerEl.textContent?.trim() || '';
+
+              if (question && answer) {
+                faqItems.push({
+                  id: `faq-item-${faqItems.length}`,
+                  question,
+                  answer
+                });
+              }
             }
           }
         });
