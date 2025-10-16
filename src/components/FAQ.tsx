@@ -3,8 +3,8 @@ import './FAQ.css';
 
 export interface FAQItem {
   id: string;
-  question: string;
-  answer: string;
+  questionElement: Node;
+  answerElement: Node;
 }
 
 export interface FAQProps {
@@ -84,14 +84,16 @@ const FAQ = ({
             const answerEl = container.querySelector('[data-faq-answer]');
 
             if (answerEl) {
-              const question = questionEl.textContent?.trim() || '';
-              const answer = answerEl.textContent?.trim() || '';
+              // Clone the actual DOM elements to preserve all HTML, classes, and styling
+              const questionClone = questionEl.cloneNode(true) as Node;
+              const answerClone = answerEl.cloneNode(true) as Node;
 
-              if (question && answer) {
+              // Verify clones have content
+              if (questionClone.textContent?.trim() && answerClone.textContent?.trim()) {
                 faqItems.push({
                   id: `faq-item-${faqItems.length}`,
-                  question,
-                  answer
+                  questionElement: questionClone,
+                  answerElement: answerClone
                 });
               }
             }
@@ -172,7 +174,10 @@ const FAQ = ({
   // Measure content heights for animation
   const measureHeight = (itemId: string, contentElement: HTMLElement | null) => {
     if (contentElement) {
-      contentHeightsRef.current[itemId] = contentElement.scrollHeight;
+      // Use a small delay to ensure content is fully rendered
+      setTimeout(() => {
+        contentHeightsRef.current[itemId] = contentElement.scrollHeight;
+      }, 0);
     }
   };
 
@@ -222,7 +227,14 @@ const FAQ = ({
                       <polyline points="6 9 10 13 14 9"></polyline>
                     </svg>
                   </span>
-                  <span className="faq__question">{item.question}</span>
+                  <span
+                    ref={(el) => {
+                      if (el && item.questionElement) {
+                        el.innerHTML = '';
+                        el.appendChild(item.questionElement.cloneNode(true));
+                      }
+                    }}
+                  />
                 </button>
 
                 {/* Answer / Content */}
@@ -238,10 +250,14 @@ const FAQ = ({
                 >
                   <div
                     className="faq__answer"
-                    ref={(el) => measureHeight(item.id, el)}
-                  >
-                    {item.answer}
-                  </div>
+                    ref={(el) => {
+                      if (el && item.answerElement) {
+                        el.innerHTML = '';
+                        el.appendChild(item.answerElement.cloneNode(true));
+                        measureHeight(item.id, el);
+                      }
+                    }}
+                  />
                 </div>
               </div>
             );
