@@ -94,7 +94,7 @@ const DotGrid: React.FC<DotGridProps> = ({
   const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
 
   const circlePath = useMemo(() => {
-    if (typeof window === 'undefined' || !window.Path2D) return null;
+    if (typeof window === 'undefined' || typeof Path2D === 'undefined') return null;
 
     const p = new Path2D();
     p.arc(0, 0, dotSize / 2, 0, Math.PI * 2);
@@ -300,7 +300,7 @@ const DotGrid: React.FC<DotGridProps> = ({
   }, [maxSpeed, speedTrigger, proximity, resistance, returnDuration, shockRadius, shockStrength]);
 
   return (
-    <section className={`dot-grid ${className}`} style={{ backgroundColor, ...style }}>
+    <div className={className ? `dot-grid ${className}` : 'dot-grid'} style={{ backgroundColor, ...style }}>
       <div ref={wrapperRef} className="dot-grid__wrap">
         <canvas 
           ref={canvasRef} 
@@ -308,7 +308,7 @@ const DotGrid: React.FC<DotGridProps> = ({
           style={blur ? { filter: 'blur(1.5px)' } : undefined}
         />
       </div>
-    </section>
+    </div>
   );
 };
 

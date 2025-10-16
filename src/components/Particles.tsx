@@ -144,7 +144,7 @@ const Particles: React.FC<ParticlesProps> = ({
     window.addEventListener('resize', resize, false);
     resize();
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: PointerEvent) => {
       const rect = container.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
@@ -152,7 +152,7 @@ const Particles: React.FC<ParticlesProps> = ({
     };
 
     if (parsedMoveOnHover) {
-      container.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('pointermove', handleMouseMove);
     }
 
     const count = particleCount;
@@ -232,7 +232,7 @@ const Particles: React.FC<ParticlesProps> = ({
     return () => {
       window.removeEventListener('resize', resize);
       if (parsedMoveOnHover) {
-        container.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('pointermove', handleMouseMove);
       }
       cancelAnimationFrame(animationFrameId);
       if (container.contains(gl.canvas)) {
@@ -254,7 +254,7 @@ const Particles: React.FC<ParticlesProps> = ({
     disableRotation
   ]);
 
-  return <div ref={containerRef} className={`particles-container ${className}`} />;
+  return <div ref={containerRef} className={className ? `particles-container ${className}` : 'particles-container'} />;
 };
 
 export default Particles;

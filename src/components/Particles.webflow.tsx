@@ -3,7 +3,7 @@ import { props } from '@webflow/data-types';
 import { declareComponent } from '@webflow/react';
 
 export default declareComponent(Particles, {
-  name: 'Particles',
+  name: 'Particles Background',
   description: 'A WebGL particle system with customizable colors and animations',
   group: 'Interactive',
   props: {
@@ -65,6 +65,11 @@ export default declareComponent(Particles, {
       name: 'Disable Rotation',
       defaultValue: '0',
     }),
+  },
+  options: {
+    applyTagSelectors: false,
+    // SSR disabled - component requires browser APIs (WebGL, canvas, window)
+    ssr: false,
   },
 });
 

@@ -1,29 +1,12 @@
 import React, { useState } from 'react';
 import './App.css';
-import { Badge } from './components/Badge.tsx';
 import DotGrid from './components/DotGrid.tsx';
 import Particles from './components/Particles.tsx';
 import MagnetLines from './components/MagnetLines.tsx';
+import GridMotion from './components/GridMotion.tsx';
 
 // Component Registry - Add new components here
 const componentRegistry = [
-  {
-    name: 'Badge',
-    component: Badge,
-    props: {
-      text: {
-        type: 'text',
-        name: 'Text',
-        defaultValue: 'Hello World',
-      },
-      variant: {
-        type: 'variant',
-        name: 'Variant',
-        options: ['Light', 'Dark'],
-        defaultValue: 'Light',
-      },
-    },
-  },
   {
     name: 'DotGrid',
     component: DotGrid,
@@ -289,6 +272,52 @@ const componentRegistry = [
         type: 'colorArray',
         name: 'Color Palette',
         defaultValue: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
+      },
+    },
+  },
+  {
+    name: 'GridMotion',
+    component: GridMotion,
+    wrapperStyle: { width: '100%', height: '600px', position: 'relative', overflow: 'hidden' },
+    props: {
+      gradientColor: {
+        type: 'color',
+        name: 'Gradient Color',
+        defaultValue: 'black',
+      },
+      rotationAngle: {
+        type: 'number',
+        name: 'Rotation Angle',
+        defaultValue: -15,
+        min: -90,
+        max: 90,
+        step: 1,
+      },
+      maxMoveAmount: {
+        type: 'number',
+        name: 'Max Move Amount',
+        defaultValue: 300,
+        min: 0,
+        max: 1000,
+        step: 10,
+      },
+      animationDuration: {
+        type: 'number',
+        name: 'Animation Duration',
+        defaultValue: 0.8,
+        min: 0.1,
+        max: 3,
+        step: 0.1,
+      },
+      itemBackgroundColor: {
+        type: 'color',
+        name: 'Item Background Color',
+        defaultValue: '#111111',
+      },
+      borderRadius: {
+        type: 'text',
+        name: 'Border Radius',
+        defaultValue: '10px',
       },
     },
   },

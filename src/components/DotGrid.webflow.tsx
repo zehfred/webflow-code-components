@@ -3,7 +3,7 @@ import { props } from '@webflow/data-types';
 import { declareComponent } from '@webflow/react';
 
 export default declareComponent(DotGrid, {
-  name: 'DotGrid',
+  name: 'Dot Grid Background',
   description: 'An interactive dot grid with mouse tracking and physics-based animations',
   group: 'Interactive',
   props: {
@@ -61,6 +61,11 @@ export default declareComponent(DotGrid, {
       min: 0.1,
       max: 5,
     }),
+  },
+  options: {
+    applyTagSelectors: false,
+    // SSR disabled - component requires browser APIs (canvas, Path2D, window)
+    ssr: false,
   },
 });
 

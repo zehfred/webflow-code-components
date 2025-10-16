@@ -3,7 +3,7 @@ import { props } from '@webflow/data-types';
 import { declareComponent } from '@webflow/react';
 
 export default declareComponent(MagnetLines, {
-  name: 'MagnetLines',
+  name: 'Magnet Lines Background',
   description: 'Lines that rotate to point at your cursor like magnetic needles',
   group: 'Interactive',
   props: {
@@ -49,5 +49,10 @@ export default declareComponent(MagnetLines, {
       min: -90,
       max: 90,
     }),
+  },
+  options: {
+    applyTagSelectors: false,
+    // SSR disabled - component requires browser APIs (DOM manipulation, window)
+    ssr: false,
   },
 });

@@ -113,7 +113,7 @@ const MagnetLines: React.FC<MagnetLinesProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`magnetLines-container ${className}`}
+      className={className ? `magnetLines-container ${className}` : 'magnetLines-container'}
       style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${columns}, 1fr)`,
