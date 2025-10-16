@@ -274,10 +274,20 @@ const FAQ = ({
                       // Clone the question element
                       const questionClone = item.questionElement.cloneNode(true) as HTMLElement;
 
-                      // Force layout styles to prevent breaking flex layout
+                      // DO NOT copy computed styles for question element
+                      // Let CSS variables and .faq__trigger * selector handle all styling
+                      // This ensures --faq-question-color, --faq-question-font-size, etc. work
+
+                      // Only force layout styles to prevent breaking flex layout
                       questionClone.style.display = 'inline-block';
                       questionClone.style.flex = '1';
                       questionClone.style.minWidth = '0';
+
+                      // Clear any problematic inline styles that might conflict with CSS variables
+                      questionClone.style.color = '';
+                      questionClone.style.fontSize = '';
+                      questionClone.style.fontFamily = '';
+                      questionClone.style.padding = '';
 
                       // Insert cloned question before icon (so icon stays visually on right)
                       const iconElement = el.querySelector('.faq__icon');
