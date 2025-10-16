@@ -36,6 +36,9 @@ const MagnetLines: React.FC<MagnetLinesProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const handlerRef = useRef<((e: PointerEvent) => void) | null>(null);
+  const mouseEnterHandlerRef = useRef<(() => void) | null>(null);
+  const mouseLeaveHandlerRef = useRef<(() => void) | null>(null);
+  const isMouseInsideRef = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -52,6 +55,8 @@ const MagnetLines: React.FC<MagnetLinesProps> = ({
       const items = container.querySelectorAll<HTMLSpanElement>('span');
 
       const onPointerMove = (pointer: { x: number; y: number }) => {
+        if (!isMouseInsideRef.current) return;
+
         items.forEach(item => {
           const rect = item.getBoundingClientRect();
           const centerX = rect.x + rect.width / 2;
@@ -66,11 +71,25 @@ const MagnetLines: React.FC<MagnetLinesProps> = ({
         });
       };
 
+      mouseEnterHandlerRef.current = () => {
+        isMouseInsideRef.current = true;
+      };
+
+      mouseLeaveHandlerRef.current = () => {
+        isMouseInsideRef.current = false;
+        // Reset all lines to base angle
+        items.forEach(item => {
+          item.style.setProperty('--rotate', `${baseAngle}deg`);
+        });
+      };
+
       handlerRef.current = (e: PointerEvent) => {
         onPointerMove({ x: e.x, y: e.y });
       };
 
       window.addEventListener('pointermove', handlerRef.current);
+      container.addEventListener('mouseenter', mouseEnterHandlerRef.current);
+      container.addEventListener('mouseleave', mouseLeaveHandlerRef.current);
 
       // Initialize with middle position
       if (items.length) {
@@ -85,8 +104,14 @@ const MagnetLines: React.FC<MagnetLinesProps> = ({
       if (handlerRef.current) {
         window.removeEventListener('pointermove', handlerRef.current);
       }
+      if (mouseEnterHandlerRef.current) {
+        container.removeEventListener('mouseenter', mouseEnterHandlerRef.current);
+      }
+      if (mouseLeaveHandlerRef.current) {
+        container.removeEventListener('mouseleave', mouseLeaveHandlerRef.current);
+      }
     };
-  }, [rows, columns, multicolor, colorPalette]);
+  }, [rows, columns, multicolor, colorPalette, baseAngle]);
 
   const total = rows * columns;
   const spans = Array.from({ length: total }, (_, i) => {

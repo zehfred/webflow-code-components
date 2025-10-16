@@ -21,7 +21,7 @@ export interface GridMotionProps {
   borderRadius?: string;
 }
 
-const GridMotion = ({ 
+const GridMotion = ({
   items = [],
   children,
   gradientColor = 'black',
@@ -36,6 +36,7 @@ const GridMotion = ({
   const mouseXRef = useRef(typeof window !== 'undefined' ? window.innerWidth / 2 : 0);
   const slotRef = useRef(null);
   const [extractedImages, setExtractedImages] = useState([]);
+  const isMouseInsideRef = useRef(false);
 
   const TOTAL_ITEMS = 28; // 4 rows × 7 columns
   const ROWS = 4;
@@ -149,7 +150,31 @@ const GridMotion = ({
       mouseXRef.current = e.clientX;
     };
 
+    const handleMouseEnter = (): void => {
+      isMouseInsideRef.current = true;
+    };
+
+    const handleMouseLeave = (): void => {
+      isMouseInsideRef.current = false;
+
+      // Reset all rows to center position
+      rowRefs.current.forEach((row, index) => {
+        if (row) {
+          const inertiaFactors = [0.6, 0.4, 0.3, 0.2];
+          gsap.to(row, {
+            x: 0,
+            duration: animationDuration + inertiaFactors[index % inertiaFactors.length],
+            ease: 'power3.out',
+            overwrite: 'auto'
+          });
+        }
+      });
+    };
+
     const updateMotion = (): void => {
+      // Only update motion if mouse is inside the component
+      if (!isMouseInsideRef.current) return;
+
       // Inertia factors for creating depth effect
       const inertiaFactors = [0.6, 0.4, 0.3, 0.2];
 
@@ -157,9 +182,13 @@ const GridMotion = ({
         if (row) {
           // Alternate direction between even and odd rows
           const direction = index % 2 === 0 ? 1 : -1;
-          
+
           // Calculate movement based on mouse position
-          const normalizedMouseX = (mouseXRef.current / window.innerWidth) - 0.5;
+          let normalizedMouseX = (mouseXRef.current / window.innerWidth) - 0.5;
+
+          // Clamp the normalized value to prevent extreme movements
+          normalizedMouseX = Math.max(-0.5, Math.min(0.5, normalizedMouseX));
+
           const moveAmount = normalizedMouseX * maxMoveAmount * direction;
 
           // Animate with GSAP
@@ -177,9 +206,20 @@ const GridMotion = ({
     const removeAnimationLoop = gsap.ticker.add(updateMotion);
     window.addEventListener('mousemove', handleMouseMove);
 
+    // Add mouse enter/leave listeners on the component
+    const introElement = gridRef.current;
+    if (introElement) {
+      introElement.addEventListener('mouseenter', handleMouseEnter);
+      introElement.addEventListener('mouseleave', handleMouseLeave);
+    }
+
     // Cleanup
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      if (introElement) {
+        introElement.removeEventListener('mouseenter', handleMouseEnter);
+        introElement.removeEventListener('mouseleave', handleMouseLeave);
+      }
       removeAnimationLoop();
     };
   }, [maxMoveAmount, animationDuration]);

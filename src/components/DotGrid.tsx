@@ -89,6 +89,7 @@ const DotGrid: React.FC<DotGridProps> = ({
     lastX: 0,
     lastY: 0
   });
+  const isMouseInsideRef = useRef(false);
 
   const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
   const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
@@ -213,6 +214,8 @@ const DotGrid: React.FC<DotGridProps> = ({
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
+      if (!isMouseInsideRef.current) return;
+
       const now = performance.now();
       const pr = pointerRef.current;
       const dt = pr.lastTime ? now - pr.lastTime : 16;
@@ -262,6 +265,8 @@ const DotGrid: React.FC<DotGridProps> = ({
     };
 
     const onClick = (e: MouseEvent) => {
+      if (!isMouseInsideRef.current) return;
+
       const rect = canvasRef.current!.getBoundingClientRect();
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
@@ -289,11 +294,33 @@ const DotGrid: React.FC<DotGridProps> = ({
       }
     };
 
+    const handleMouseEnter = () => {
+      isMouseInsideRef.current = true;
+    };
+
+    const handleMouseLeave = () => {
+      isMouseInsideRef.current = false;
+      // Reset pointer velocity when mouse leaves
+      pointerRef.current.speed = 0;
+      pointerRef.current.vx = 0;
+      pointerRef.current.vy = 0;
+    };
+
     const throttledMove = throttle(onMove, 50);
+    const wrapper = wrapperRef.current;
+
+    if (wrapper) {
+      wrapper.addEventListener('mouseenter', handleMouseEnter);
+      wrapper.addEventListener('mouseleave', handleMouseLeave);
+    }
     window.addEventListener('mousemove', throttledMove, { passive: true });
     window.addEventListener('click', onClick);
 
     return () => {
+      if (wrapper) {
+        wrapper.removeEventListener('mouseenter', handleMouseEnter);
+        wrapper.removeEventListener('mouseleave', handleMouseLeave);
+      }
       window.removeEventListener('mousemove', throttledMove);
       window.removeEventListener('click', onClick);
     };

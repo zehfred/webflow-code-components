@@ -114,6 +114,7 @@ const Particles: React.FC<ParticlesProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const isMouseInsideRef = useRef(false);
 
   // Parse string-based props from Webflow
   const parsedMoveOnHover = typeof moveParticlesOnHover === 'string' ? moveParticlesOnHover === '1' : moveParticlesOnHover;
@@ -163,14 +164,31 @@ const Particles: React.FC<ParticlesProps> = ({
     });
 
     const handleMouseMove = (e: PointerEvent) => {
+      if (!isMouseInsideRef.current) return;
       const rect = container.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      mouseRef.current = { x, y };
+      // Clamp values to prevent extreme movements
+      mouseRef.current = {
+        x: Math.max(-1, Math.min(1, x)),
+        y: Math.max(-1, Math.min(1, y))
+      };
+    };
+
+    const handleMouseEnter = () => {
+      isMouseInsideRef.current = true;
+    };
+
+    const handleMouseLeave = () => {
+      isMouseInsideRef.current = false;
+      // Reset to center position
+      mouseRef.current = { x: 0, y: 0 };
     };
 
     if (parsedMoveOnHover) {
       window.addEventListener('pointermove', handleMouseMove);
+      container.addEventListener('mouseenter', handleMouseEnter);
+      container.addEventListener('mouseleave', handleMouseLeave);
     }
 
     const count = particleCount;
@@ -255,6 +273,8 @@ const Particles: React.FC<ParticlesProps> = ({
       }
       if (parsedMoveOnHover) {
         window.removeEventListener('pointermove', handleMouseMove);
+        container.removeEventListener('mouseenter', handleMouseEnter);
+        container.removeEventListener('mouseleave', handleMouseLeave);
       }
       cancelAnimationFrame(animationFrameId);
       if (container.contains(gl.canvas)) {
