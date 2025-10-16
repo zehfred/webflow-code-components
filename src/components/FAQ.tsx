@@ -77,10 +77,9 @@ const FAQ = ({
               const questionClone = questionEl.cloneNode(true) as HTMLElement;
               const answerClone = answerEl.cloneNode(true) as HTMLElement;
 
-              // Copy all computed styles from original elements to preserve Webflow styling
-              // This is necessary because we're moving elements from light DOM to Shadow DOM
-              copyComputedStyles(questionEl, questionClone);
-              copyComputedStyles(answerEl, answerClone);
+              // Do NOT copy computed styles - let CSS variables handle styling
+              // CSS variables (--faq-question-color, etc.) will apply styles in Shadow DOM
+              // Copying computed styles creates massive inline style attributes that override CSS variables
 
               // Verify clones have content
               if (questionClone.textContent?.trim() && answerClone.textContent?.trim()) {
@@ -165,67 +164,6 @@ const FAQ = ({
     }
   };
 
-  // Properties that should not be copied to avoid breaking layout or being handled by CSS variables
-  const propertiesToSkip = new Set([
-    // CSS variables control these
-    'color',
-    'font-size',
-    'font-family',
-    'padding',
-    'padding-top',
-    'padding-right',
-    'padding-bottom',
-    'padding-left',
-    'border-color',
-    'background-color',
-    // Layout-breaking properties
-    'display',
-    'width',
-    'max-width',
-    'min-width',
-    'height',
-    'max-height',
-    'min-height',
-    'flex',
-    'flex-grow',
-    'flex-shrink',
-    'flex-basis',
-    'position',
-    'margin',
-    'margin-top',
-    'margin-right',
-    'margin-bottom',
-    'margin-left'
-  ]);
-
-
-  // Copy only selective computed styles (not handled by CSS variables)
-  // This is much faster than copying all 200+ properties
-  const copyComputedStyles = (original: Element, clone: HTMLElement) => {
-    const computed = window.getComputedStyle(original);
-
-    // Only copy properties not handled by CSS variables or that break layout
-    for (let i = 0; i < computed.length; i++) {
-      const prop = computed[i];
-
-      // Skip properties we don't want to copy
-      if (propertiesToSkip.has(prop)) continue;
-
-      const value = computed.getPropertyValue(prop);
-      const priority = computed.getPropertyPriority(prop);
-      clone.style.setProperty(prop, value, priority);
-    }
-
-    // Recursively copy styles for all children (important for rich text)
-    const children = Array.from(original.children);
-    for (let i = 0; i < children.length; i++) {
-      const originalChild = children[i];
-      const cloneChild = clone.children[i] as HTMLElement;
-      if (cloneChild) {
-        copyComputedStyles(originalChild, cloneChild);
-      }
-    }
-  };
 
   // Measure content heights for animation
   const measureHeight = (itemId: string, contentElement: HTMLElement | null) => {
@@ -274,20 +212,13 @@ const FAQ = ({
                       // Clone the question element
                       const questionClone = item.questionElement.cloneNode(true) as HTMLElement;
 
-                      // DO NOT copy computed styles for question element
-                      // Let CSS variables and .faq__trigger * selector handle all styling
-                      // This ensures --faq-question-color, --faq-question-font-size, etc. work
-
-                      // Only force layout styles to prevent breaking flex layout
+                      // Force flex layout styles only to prevent breaking the button layout
                       questionClone.style.display = 'inline-block';
                       questionClone.style.flex = '1';
                       questionClone.style.minWidth = '0';
 
-                      // Clear any problematic inline styles that might conflict with CSS variables
-                      questionClone.style.color = '';
-                      questionClone.style.fontSize = '';
-                      questionClone.style.fontFamily = '';
-                      questionClone.style.padding = '';
+                      // Let CSS variables and .faq__trigger * selector handle all styling
+                      // This ensures --faq-question-color, --faq-question-font-size, etc. work properly
 
                       // Insert cloned question before icon (so icon stays visually on right)
                       const iconElement = el.querySelector('.faq__icon');
