@@ -136,13 +136,31 @@ const Particles: React.FC<ParticlesProps> = ({
     camera.position.set(0, 0, cameraDistance);
 
     const resize = () => {
-      const width = container.clientWidth;
-      const height = container.clientHeight;
+      // Fallback to window dimensions if container hasn't been sized yet
+      const width = Math.max(container.clientWidth, window.innerWidth);
+      const height = Math.max(container.clientHeight, window.innerHeight);
       renderer.setSize(width, height);
       camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
     };
-    window.addEventListener('resize', resize, false);
-    resize();
+
+    // Use ResizeObserver for more reliable container size tracking
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        resize();
+      });
+      resizeObserver.observe(container);
+    } else {
+      // Fallback to window resize for older browsers
+      window.addEventListener('resize', resize, false);
+    }
+
+    // Delay initial resize to ensure DOM has painted
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        resize();
+      });
+    });
 
     const handleMouseMove = (e: PointerEvent) => {
       const rect = container.getBoundingClientRect();
@@ -230,7 +248,11 @@ const Particles: React.FC<ParticlesProps> = ({
     animationFrameId = requestAnimationFrame(update);
 
     return () => {
-      window.removeEventListener('resize', resize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      } else {
+        window.removeEventListener('resize', resize);
+      }
       if (parsedMoveOnHover) {
         window.removeEventListener('pointermove', handleMouseMove);
       }
