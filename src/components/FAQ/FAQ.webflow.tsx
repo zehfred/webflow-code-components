@@ -268,14 +268,14 @@ export default declareComponent(FAQWebflow, {
       name: 'Border Width',
       defaultValue: '1px',
       group: 'Borders',
-      tooltip: 'Border width for all sides (e.g., 1px, 2px, 0)'
+      tooltip: 'Border width using CSS shorthand (e.g., 1px for all sides, 1px 2px 0 1px for top/right/bottom/left, or var(--border-width))'
     }),
 
     borderRadius: props.Text({
       name: 'Border Radius',
       defaultValue: '0px',
       group: 'Borders',
-      tooltip: 'Border radius for FAQ items (e.g., 8px or var(--radius-md))'
+      tooltip: 'Border radius using CSS shorthand (e.g., 8px for all corners, 8px 0 0 8px for top-left/top-right/bottom-right/bottom-left, or var(--radius-md))'
     }),
 
     // QUESTION GROUP

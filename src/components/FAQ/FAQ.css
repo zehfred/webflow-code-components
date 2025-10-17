@@ -21,7 +21,9 @@
 /* ─────────────────────────────────────────────────────────────── */
 
 .faq__item {
-  border: var(--faq-border-width, 1px) solid var(--faq-border-color, #e5e5e5);
+  border-style: solid;
+  border-color: var(--faq-border-color, #e5e5e5);
+  border-width: var(--faq-border-width, 1px);
   border-radius: var(--faq-border-radius, 0px);
   transition: background-color 0.2s ease;
 }
