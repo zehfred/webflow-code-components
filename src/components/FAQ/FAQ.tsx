@@ -12,24 +12,73 @@ export interface FAQProps {
   type?: 'single' | 'multiple';
   /** Index of item to open by default (0 = none, 1 = first, 2 = second, etc.) */
   defaultOpenIndex?: number;
-  /** Position of expand/collapse icon */
-  iconPosition?: 'left' | 'right';
+  /** Custom icon image URL for the expand/collapse indicator */
+  icon?: string;
   /** Animation duration in seconds */
   animationDuration?: number;
   /** Children slot for Collection List */
   children?: any;
+
+  // Style Props - Colors
+  /** Border color for FAQ items (e.g., #e5e5e5 or var(--border-color)) */
+  borderColor?: string;
+  /** Background color on hover (e.g., #f9f9f9 or var(--hover-bg)) */
+  hoverColor?: string;
+  /** Question text color (e.g., #000000 or var(--text-primary)) */
+  questionColor?: string;
+  /** Answer text color (e.g., #666666 or var(--text-secondary)) */
+  answerColor?: string;
+  /** Chevron icon color (e.g., #000000 or var(--icon-color)) */
+  chevronColor?: string;
+
+  // Style Props - Typography
+  /** Question font size (e.g., 18px or var(--font-lg)) */
+  questionFontSize?: string;
+  /** Question font family (e.g., 'Inter', sans-serif or var(--font-body)) */
+  questionFontFamily?: string;
+  /** Question font weight (e.g., 600 or var(--font-semibold)) */
+  questionFontWeight?: string;
+  /** Answer font size (e.g., 16px or var(--font-base)) */
+  answerFontSize?: string;
+  /** Answer font family (e.g., 'Inter', sans-serif or var(--font-body)) */
+  answerFontFamily?: string;
+
+  // Style Props - Spacing
+  /** Gap between FAQ items (e.g., 8px or var(--space-2)) */
+  itemGap?: string;
+  /** Padding for question area (e.g., 20px or var(--space-4)) */
+  questionPadding?: string;
+  /** Padding for answer area (e.g., 0 20px 20px 20px) */
+  answerPadding?: string;
+  /** Border radius for FAQ items (e.g., 8px or var(--radius-md)) */
+  borderRadius?: string;
 }
 
 const FAQ = ({
   type = 'single',
   defaultOpenIndex = 0,
-  iconPosition = 'right',
+  icon,
   animationDuration = 0.3,
-  children
+  children,
+  // Style props with defaults
+  borderColor = '#e5e5e5',
+  hoverColor = '#f9f9f9',
+  questionColor = '#000000',
+  answerColor = '#666666',
+  chevronColor = '#000000',
+  questionFontSize = 'inherit',
+  questionFontFamily = 'inherit',
+  questionFontWeight = 'inherit',
+  answerFontSize = '16px',
+  answerFontFamily = 'inherit',
+  itemGap = '0px',
+  questionPadding = '16px',
+  answerPadding = '0 16px 16px 16px',
+  borderRadius = '0px'
 }: FAQProps) => {
   const [items, setItems] = useState<FAQItem[]>([]);
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
-  const slotRef = useRef(null);
+  const slotRef = useRef<HTMLDivElement>(null);
   const contentHeightsRef = useRef<Record<string, number>>({});
 
 
@@ -176,7 +225,25 @@ const FAQ = ({
   };
 
   return (
-    <div className="faq">
+    <div
+      className="faq"
+      style={{
+        '--faq-border-color': borderColor,
+        '--faq-hover-color': hoverColor,
+        '--faq-question-color': questionColor,
+        '--faq-answer-color': answerColor,
+        '--faq-chevron-color': chevronColor,
+        '--faq-question-font-size': questionFontSize,
+        '--faq-question-font-family': questionFontFamily,
+        '--faq-question-font-weight': questionFontWeight,
+        '--faq-answer-font-size': answerFontSize,
+        '--faq-answer-font-family': answerFontFamily,
+        '--faq-item-gap': itemGap,
+        '--faq-question-padding': questionPadding,
+        '--faq-answer-padding': answerPadding,
+        '--faq-border-radius': borderRadius,
+      } as React.CSSProperties}
+    >
       {/* Hidden slot for Collection List */}
       <div ref={slotRef} style={{ display: 'none' }}>
         {children}
@@ -196,7 +263,7 @@ const FAQ = ({
               >
                 {/* Question / Trigger */}
                 <button
-                  className={`faq__trigger ${iconPosition === 'left' ? 'faq__trigger--icon-left' : ''}`}
+                  className="faq__trigger"
                   onClick={() => toggleItem(item.id)}
                   onKeyDown={(e) => handleKeyDown(e, item.id)}
                   aria-expanded={isOpen}
@@ -234,18 +301,22 @@ const FAQ = ({
                   }}
                 >
                   <span className="faq__icon" aria-hidden="true">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="6 9 10 13 14 9"></polyline>
-                    </svg>
+                    {icon ? (
+                      <img src={icon} alt="" className="faq__icon-image" />
+                    ) : (
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="6 9 10 13 14 9"></polyline>
+                      </svg>
+                    )}
                   </span>
                 </button>
 

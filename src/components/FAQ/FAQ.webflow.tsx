@@ -37,9 +37,14 @@ import './FAQ.css';
  *         - Add attribute: data-faq-answer
  *         - Bind it to the "Answer" field
  *
- * 5. CUSTOMIZE (OPTIONAL)
- *    - Adjust animation speed, colors, and icon position
- *    - Choose between single or multiple open items
+ * 5. CUSTOMIZE STYLING
+ *    - Select the FAQ component in Webflow Designer
+ *    - Use the component settings panel to adjust:
+ *      • Colors (border, hover, text, icon)
+ *      • Typography (font sizes, families, weights)
+ *      • Spacing (gaps, padding, border radius)
+ *      • Behavior (accordion type, default open item)
+ *      • Animation (open/close speed)
  *
  * 6. PUBLISH & ENJOY! 🎉
  *
@@ -71,31 +76,23 @@ import './FAQ.css';
  * ✓ Respects prefers-reduced-motion
  *
  * ═══════════════════════════════════════════════════════════════
- * CUSTOMIZE WITH CSS VARIABLES (Webflow Variables Tool)
+ * STYLING OPTIONS:
  * ═══════════════════════════════════════════════════════════════
  *
- * The FAQ component uses CSS Variables for all styling. Set them in Webflow:
+ * All styling is controlled through component props in Webflow Designer.
+ * Each style prop accepts either:
+ * - Direct values (e.g., #FF0000, 16px, "Inter", sans-serif, 600)
+ * - CSS variables (e.g., var(--primary-color), var(--font-lg))
  *
- * 1. Open your Webflow Project Settings
- * 2. Go to Variables (in the left menu)
- * 3. Create new variables with these names:
+ * Available style groups:
+ * • Colors - Border, hover background, text colors, icon color
+ * • Typography - Font sizes, families, and weights
+ * • Spacing - Item gaps, padding, border radius
  *
- * --faq-toggle-border-color      (e.g., #000000)
- * --faq-toggle-hover-color       (e.g., #f0f0f0)
- * --faq-item-gap                 (e.g., 8px)
- * --faq-question-color           (e.g., #1a1a1a)
- * --faq-question-font-size       (e.g., 18px)
- * --faq-question-font-family     (e.g., 'Inter', sans-serif)
- * --faq-question-padding         (e.g., 20px)
- * --faq-answer-color             (e.g., #666666)
- * --faq-answer-font-size         (e.g., 16px)
- * --faq-answer-font-family       (e.g., 'Inter', sans-serif)
- * --faq-answer-padding           (e.g., 0 20px 20px 20px)
- * --faq-border-radius            (e.g., 8px)
- *
- * The component will automatically inherit these values from Webflow's
- * CSS variables, which are set in the :root scope and inherited by
- * the Shadow DOM component.
+ * To use Webflow Variables:
+ * 1. Create variables in Project Settings → Variables
+ * 2. Reference them in component props using var(--variable-name)
+ * 3. Example: var(--colors-primary) or var(--spacing-md)
  *
  * ═══════════════════════════════════════════════════════════════
  */
@@ -107,22 +104,51 @@ interface FAQWebflowProps {
   type?: 'single' | 'multiple';
   /** Which item is open by default (0 = none, 1 = first, 2 = second, etc.) */
   defaultOpenIndex?: number;
-  /** Position of the expand/collapse icon */
-  iconPosition?: 'left' | 'right';
+  /** Custom icon image URL */
+  icon?: string;
   /** Animation speed in seconds */
   animationDuration?: number;
+
+  // Style props
+  borderColor?: string;
+  hoverColor?: string;
+  questionColor?: string;
+  answerColor?: string;
+  chevronColor?: string;
+  questionFontSize?: string;
+  questionFontFamily?: string;
+  questionFontWeight?: string;
+  answerFontSize?: string;
+  answerFontFamily?: string;
+  itemGap?: string;
+  questionPadding?: string;
+  answerPadding?: string;
+  borderRadius?: string;
 }
 
 const FAQWebflow = ({
   children,
   type = 'single',
   defaultOpenIndex = 0,
-  iconPosition = 'right',
-  animationDuration = 0.3
+  icon,
+  animationDuration = 0.3,
+  borderColor,
+  hoverColor,
+  questionColor,
+  answerColor,
+  chevronColor,
+  questionFontSize,
+  questionFontFamily,
+  questionFontWeight,
+  answerFontSize,
+  answerFontFamily,
+  itemGap,
+  questionPadding,
+  answerPadding,
+  borderRadius
 }: FAQWebflowProps) => {
   // Parse string values from Webflow
   const parsedType = (typeof type === 'string' ? type : 'single') as 'single' | 'multiple';
-  const parsedIcon = (typeof iconPosition === 'string' ? iconPosition : 'right') as 'left' | 'right';
   const parsedDuration = typeof animationDuration === 'string'
     ? parseFloat(animationDuration)
     : animationDuration;
@@ -134,8 +160,22 @@ const FAQWebflow = ({
     <FAQ
       type={parsedType}
       defaultOpenIndex={parsedDefaultIndex}
-      iconPosition={parsedIcon}
+      icon={icon}
       animationDuration={parsedDuration}
+      borderColor={borderColor}
+      hoverColor={hoverColor}
+      questionColor={questionColor}
+      answerColor={answerColor}
+      chevronColor={chevronColor}
+      questionFontSize={questionFontSize}
+      questionFontFamily={questionFontFamily}
+      questionFontWeight={questionFontWeight}
+      answerFontSize={answerFontSize}
+      answerFontFamily={answerFontFamily}
+      itemGap={itemGap}
+      questionPadding={questionPadding}
+      answerPadding={answerPadding}
+      borderRadius={borderRadius}
     >
       {children}
     </FAQ>
@@ -153,8 +193,9 @@ export default declareComponent(FAQWebflow, {
       tooltip: 'Add a Collection List here with items containing data-faq-question and data-faq-answer attributes. See the documentation for setup instructions.'
     }),
 
-    type: props.Text({
+    type: props.Variant({
       name: 'Accordion Type',
+      options: ['single', 'multiple'],
       defaultValue: 'single',
       group: 'Behavior',
       tooltip: 'single: Only one item can be open at a time. multiple: Multiple items can be open simultaneously.'
@@ -170,11 +211,10 @@ export default declareComponent(FAQWebflow, {
       tooltip: 'Set to 0 for none open, 1 for first item, 2 for second item, etc. Only applies when type is "single".'
     }),
 
-    iconPosition: props.Text({
-      name: 'Icon Position',
-      defaultValue: 'right',
+    icon: props.Image({
+      name: 'Icon',
       group: 'Style',
-      tooltip: 'Position of the expand/collapse icon: "left" or "right"'
+      tooltip: 'Custom icon image for expand/collapse indicator. If not set, a default chevron icon will be used.'
     }),
 
     animationDuration: props.Number({
@@ -185,6 +225,107 @@ export default declareComponent(FAQWebflow, {
       max: 2,
       decimals: 1,
       tooltip: 'Duration of open/close animation in seconds (lower = faster)'
+    }),
+
+    // Colors
+    borderColor: props.Text({
+      name: 'Border Color',
+      defaultValue: '#e5e5e5',
+      group: 'Colors',
+      tooltip: 'Border color for FAQ items (e.g., #e5e5e5 or var(--border-color))'
+    }),
+
+    hoverColor: props.Text({
+      name: 'Hover Background',
+      defaultValue: '#f9f9f9',
+      group: 'Colors',
+      tooltip: 'Background color on hover (e.g., #f9f9f9 or var(--hover-bg))'
+    }),
+
+    questionColor: props.Text({
+      name: 'Question Color',
+      defaultValue: '#000000',
+      group: 'Colors',
+      tooltip: 'Question text color (e.g., #000000 or var(--text-primary))'
+    }),
+
+    answerColor: props.Text({
+      name: 'Answer Color',
+      defaultValue: '#666666',
+      group: 'Colors',
+      tooltip: 'Answer text color (e.g., #666666 or var(--text-secondary))'
+    }),
+
+    chevronColor: props.Text({
+      name: 'Icon Color',
+      defaultValue: '#000000',
+      group: 'Colors',
+      tooltip: 'Chevron icon color (e.g., #000000 or var(--icon-color))'
+    }),
+
+    // Typography
+    questionFontSize: props.Text({
+      name: 'Question Font Size',
+      defaultValue: 'inherit',
+      group: 'Typography',
+      tooltip: 'Question font size (e.g., 18px or var(--font-lg))'
+    }),
+
+    questionFontFamily: props.Text({
+      name: 'Question Font Family',
+      defaultValue: 'inherit',
+      group: 'Typography',
+      tooltip: 'Question font family (e.g., "Inter", sans-serif or var(--font-body))'
+    }),
+
+    questionFontWeight: props.Text({
+      name: 'Question Font Weight',
+      defaultValue: 'inherit',
+      group: 'Typography',
+      tooltip: 'Question font weight (e.g., 600 or var(--font-semibold))'
+    }),
+
+    answerFontSize: props.Text({
+      name: 'Answer Font Size',
+      defaultValue: '16px',
+      group: 'Typography',
+      tooltip: 'Answer font size (e.g., 16px or var(--font-base))'
+    }),
+
+    answerFontFamily: props.Text({
+      name: 'Answer Font Family',
+      defaultValue: 'inherit',
+      group: 'Typography',
+      tooltip: 'Answer font family (e.g., "Inter", sans-serif or var(--font-body))'
+    }),
+
+    // Spacing
+    itemGap: props.Text({
+      name: 'Item Gap',
+      defaultValue: '0px',
+      group: 'Spacing',
+      tooltip: 'Gap between FAQ items (e.g., 8px or var(--space-2))'
+    }),
+
+    questionPadding: props.Text({
+      name: 'Question Padding',
+      defaultValue: '16px',
+      group: 'Spacing',
+      tooltip: 'Padding for question area (e.g., 20px or var(--space-4))'
+    }),
+
+    answerPadding: props.Text({
+      name: 'Answer Padding',
+      defaultValue: '0 16px 16px 16px',
+      group: 'Spacing',
+      tooltip: 'Padding for answer area (e.g., 0 20px 20px 20px)'
+    }),
+
+    borderRadius: props.Text({
+      name: 'Border Radius',
+      defaultValue: '0px',
+      group: 'Spacing',
+      tooltip: 'Border radius for FAQ items (e.g., 8px or var(--radius-md))'
     })
   },
 

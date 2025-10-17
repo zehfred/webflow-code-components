@@ -31,11 +31,11 @@ const GridMotion = ({
   itemBackgroundColor = '#111',
   borderRadius = '10px'
 }: GridMotionProps) => {
-  const gridRef = useRef(null);
-  const rowRefs = useRef([]);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
   const mouseXRef = useRef(typeof window !== 'undefined' ? window.innerWidth / 2 : 0);
-  const slotRef = useRef(null);
-  const [extractedImages, setExtractedImages] = useState([]);
+  const slotRef = useRef<HTMLDivElement | null>(null);
+  const [extractedImages, setExtractedImages] = useState<string[]>([]);
   const isMouseInsideRef = useRef(false);
 
   const TOTAL_ITEMS = 28; // 4 rows × 7 columns

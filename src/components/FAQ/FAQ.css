@@ -2,9 +2,9 @@
 /* FAQ Component Styles */
 /* ═══════════════════════════════════════════════════════════════ */
 
-/* NOTE: CSS Variables are inherited from :root (set in Webflow Variables tool)
-   Do NOT define :host variables - they override inherited :root values
-   Instead, use fallback values directly in var() declarations */
+/* NOTE: CSS Variables are set dynamically via component props
+   Values come from inline styles applied to the root .faq element
+   These variables can accept direct values or CSS variables from Webflow */
 
 .faq {
   width: 100%;
@@ -21,8 +21,8 @@
 /* ─────────────────────────────────────────────────────────────── */
 
 .faq__item {
-  border: 1px solid var(--faq-toggle-border-color, #e5e5e5);  /* Fallback: #e5e5e5 */
-  border-radius: var(--faq-border-radius, 0px);  /* Fallback: 0px */
+  border: 1px solid var(--faq-border-color, #e5e5e5);
+  border-radius: var(--faq-border-radius, 0px);
   transition: background-color 0.2s ease;
 }
 
@@ -47,20 +47,20 @@
 }
 
 .faq__trigger:hover {
-  background-color: var(--faq-toggle-hover-color, #f9f9f9);  /* Fallback: #f9f9f9 */
+  background-color: var(--faq-hover-color, #f9f9f9);
 }
 
 /* Allow Webflow styles to cascade to question element only (not icon) */
 .faq__trigger [data-faq-question],
 .faq__trigger [data-faq-question] * {
-  font-family: var(--faq-question-font-family, inherit);  /* Fallback: inherit */
-  font-size: var(--faq-question-font-size, inherit);  /* Fallback: inherit */
-  font-weight: var(--faq-question-font-weight, inherit);  /* Fallback: inherit */
-  color: var(--faq-question-color, #000000);  /* Fallback: #000000 */
+  font-family: var(--faq-question-font-family, inherit);
+  font-size: var(--faq-question-font-size, inherit);
+  font-weight: var(--faq-question-font-weight, inherit);
+  color: var(--faq-question-color, #000000);
   line-height: inherit;
   letter-spacing: inherit;
   margin: 0;
-  padding: var(--faq-question-padding, 16px);  /* Fallback: 16px */
+  padding: var(--faq-question-padding, 16px);
 }
 
 .faq__trigger:focus,
@@ -76,21 +76,17 @@
   flex-shrink: 0;
   width: 1.5rem;
   height: 1.5rem;
-	margin-right: 1rem;
+  margin-left: auto;
+  margin-right: 1rem;
   transition: transform 0.3s ease;
   color: var(--faq-chevron-color, #000000);
 }
 
-/* Icon on right (default) */
-.faq__trigger .faq__icon {
-  margin-left: auto;
-  order: 1;
-}
-
-/* Icon on left */
-.faq__trigger--icon-left .faq__icon {
-  margin-left: 0;
-  order: -1;
+/* Custom icon image */
+.faq__icon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* Rotate icon when item is open */
@@ -116,13 +112,13 @@
 
 /* Allow Webflow styles to cascade to answer element and rich text */
 .faq__content * {
-  font-family: var(--faq-answer-font-family, inherit);  /* Fallback: inherit */
-  color: var(--faq-answer-color, #000000);  /* Fallback: #000000 */
-  font-size: var(--faq-answer-font-size, 16px);  /* Fallback: 16px */
+  font-family: var(--faq-answer-font-family, inherit);
+  color: var(--faq-answer-color, #666666);
+  font-size: var(--faq-answer-font-size, 16px);
 }
 
 .faq__answer {
-  padding: var(--faq-answer-padding, 0 16px 16px 16px);  /* Fallback: 0 16px 16px 16px */
+  padding: var(--faq-answer-padding, 0 16px 16px 16px);
 }
 
 /* ─────────────────────────────────────────────────────────────── */
