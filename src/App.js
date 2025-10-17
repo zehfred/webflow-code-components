@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import './App.css';
-import DotGrid from './components/DotGrid.tsx';
-import Particles from './components/Particles.tsx';
-import MagnetLines from './components/MagnetLines.tsx';
-import GridMotion from './components/GridMotion.tsx';
-import FAQ from './components/FAQ.tsx';
+import DotGrid from './components/DotGrid/DotGrid.tsx';
+import Particles from './components/Particles/Particles.tsx';
+import MagnetLines from './components/MagnetLines/MagnetLines.tsx';
+import GridMotion from './components/GridMotion/GridMotion.tsx';
+import FAQ from './components/FAQ/FAQ.tsx';
 
 // Component Registry - Add new components here
 const componentRegistry = [
