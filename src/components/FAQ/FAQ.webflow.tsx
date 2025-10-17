@@ -101,7 +101,7 @@ interface FAQWebflowProps {
   /** Slot for Collection List with FAQ items */
   children?: any;
   /** Accordion type: single or multiple items open */
-  type?: 'single' | 'multiple';
+  type?: 'Single' | 'Multiple';
   /** Which item is open by default (0 = none, 1 = first, 2 = second, etc.) */
   defaultOpenIndex?: number;
   /** Custom icon image URL */
@@ -110,11 +110,14 @@ interface FAQWebflowProps {
   animationDuration?: number;
 
   // Style props
+  iconWidth?: string;
+  iconHeight?: string;
   borderColor?: string;
+  borderWidth?: string;
+  borderRadius?: string;
   hoverColor?: string;
   questionColor?: string;
   answerColor?: string;
-  chevronColor?: string;
   questionFontSize?: string;
   questionFontFamily?: string;
   questionFontWeight?: string;
@@ -123,20 +126,22 @@ interface FAQWebflowProps {
   itemGap?: string;
   questionPadding?: string;
   answerPadding?: string;
-  borderRadius?: string;
 }
 
 const FAQWebflow = ({
   children,
-  type = 'single',
+  type = 'Single',
   defaultOpenIndex = 0,
   icon,
   animationDuration = 0.3,
+  iconWidth,
+  iconHeight,
   borderColor,
+  borderWidth,
+  borderRadius,
   hoverColor,
   questionColor,
   answerColor,
-  chevronColor,
   questionFontSize,
   questionFontFamily,
   questionFontWeight,
@@ -144,11 +149,10 @@ const FAQWebflow = ({
   answerFontFamily,
   itemGap,
   questionPadding,
-  answerPadding,
-  borderRadius
+  answerPadding
 }: FAQWebflowProps) => {
   // Parse string values from Webflow
-  const parsedType = (typeof type === 'string' ? type : 'single') as 'single' | 'multiple';
+  const parsedType = (typeof type === 'string' ? type.toLowerCase() : 'single') as 'single' | 'multiple';
   const parsedDuration = typeof animationDuration === 'string'
     ? parseFloat(animationDuration)
     : animationDuration;
@@ -162,11 +166,14 @@ const FAQWebflow = ({
       defaultOpenIndex={parsedDefaultIndex}
       icon={icon}
       animationDuration={parsedDuration}
+      iconWidth={iconWidth}
+      iconHeight={iconHeight}
       borderColor={borderColor}
+      borderWidth={borderWidth}
+      borderRadius={borderRadius}
       hoverColor={hoverColor}
       questionColor={questionColor}
       answerColor={answerColor}
-      chevronColor={chevronColor}
       questionFontSize={questionFontSize}
       questionFontFamily={questionFontFamily}
       questionFontWeight={questionFontWeight}
@@ -175,7 +182,6 @@ const FAQWebflow = ({
       itemGap={itemGap}
       questionPadding={questionPadding}
       answerPadding={answerPadding}
-      borderRadius={borderRadius}
     >
       {children}
     </FAQ>
@@ -193,12 +199,13 @@ export default declareComponent(FAQWebflow, {
       tooltip: 'Add a Collection List here with items containing data-faq-question and data-faq-answer attributes. See the documentation for setup instructions.'
     }),
 
+    // BEHAVIOR GROUP
     type: props.Variant({
       name: 'Accordion Type',
-      options: ['single', 'multiple'],
-      defaultValue: 'single',
+      options: ['Single', 'Multiple'],
+      defaultValue: 'Single',
       group: 'Behavior',
-      tooltip: 'single: Only one item can be open at a time. multiple: Multiple items can be open simultaneously.'
+      tooltip: 'Single: Only one item can be open at a time. Multiple: Multiple items can be open simultaneously.'
     }),
 
     defaultOpenIndex: props.Number({
@@ -208,124 +215,139 @@ export default declareComponent(FAQWebflow, {
       min: 0,
       max: 100,
       decimals: 0,
-      tooltip: 'Set to 0 for none open, 1 for first item, 2 for second item, etc. Only applies when type is "single".'
-    }),
-
-    icon: props.Image({
-      name: 'Icon',
-      group: 'Style',
-      tooltip: 'Custom icon image for expand/collapse indicator. If not set, a default chevron icon will be used.'
+      tooltip: 'Set to 0 for none open, 1 for first item, 2 for second item, etc. Only applies when type is "Single".'
     }),
 
     animationDuration: props.Number({
       name: 'Animation Speed',
       defaultValue: 0.3,
-      group: 'Animation',
+      group: 'Behavior',
       min: 0.1,
       max: 2,
       decimals: 1,
       tooltip: 'Duration of open/close animation in seconds (lower = faster)'
     }),
 
-    // Colors
+    itemGap: props.Text({
+      name: 'Item Gap',
+      defaultValue: '0px',
+      group: 'Behavior',
+      tooltip: 'Gap between FAQ items (e.g., 8px or var(--space-2))'
+    }),
+
+    // ICON GROUP
+    icon: props.Image({
+      name: 'Icon',
+      group: 'Icon',
+      tooltip: 'Custom icon image for expand/collapse indicator'
+    }),
+
+    iconWidth: props.Text({
+      name: 'Icon Width',
+      defaultValue: '24px',
+      group: 'Icon',
+      tooltip: 'Width of the icon (e.g., 24px or var(--icon-size))'
+    }),
+
+    iconHeight: props.Text({
+      name: 'Icon Height',
+      defaultValue: '24px',
+      group: 'Icon',
+      tooltip: 'Height of the icon (e.g., 24px or var(--icon-size))'
+    }),
+
+    // BORDERS GROUP
     borderColor: props.Text({
       name: 'Border Color',
       defaultValue: '#e5e5e5',
-      group: 'Colors',
+      group: 'Borders',
       tooltip: 'Border color for FAQ items (e.g., #e5e5e5 or var(--border-color))'
     }),
 
+    borderWidth: props.Text({
+      name: 'Border Width',
+      defaultValue: '1px',
+      group: 'Borders',
+      tooltip: 'Border width for all sides (e.g., 1px, 2px, 0)'
+    }),
+
+    borderRadius: props.Text({
+      name: 'Border Radius',
+      defaultValue: '0px',
+      group: 'Borders',
+      tooltip: 'Border radius for FAQ items (e.g., 8px or var(--radius-md))'
+    }),
+
+    // QUESTION GROUP
     hoverColor: props.Text({
       name: 'Hover Background',
       defaultValue: '#f9f9f9',
-      group: 'Colors',
+      group: 'Question',
       tooltip: 'Background color on hover (e.g., #f9f9f9 or var(--hover-bg))'
     }),
 
     questionColor: props.Text({
       name: 'Question Color',
       defaultValue: '#000000',
-      group: 'Colors',
+      group: 'Question',
       tooltip: 'Question text color (e.g., #000000 or var(--text-primary))'
     }),
 
-    answerColor: props.Text({
-      name: 'Answer Color',
-      defaultValue: '#666666',
-      group: 'Colors',
-      tooltip: 'Answer text color (e.g., #666666 or var(--text-secondary))'
-    }),
-
-    chevronColor: props.Text({
-      name: 'Icon Color',
-      defaultValue: '#000000',
-      group: 'Colors',
-      tooltip: 'Chevron icon color (e.g., #000000 or var(--icon-color))'
-    }),
-
-    // Typography
     questionFontSize: props.Text({
       name: 'Question Font Size',
       defaultValue: 'inherit',
-      group: 'Typography',
+      group: 'Question',
       tooltip: 'Question font size (e.g., 18px or var(--font-lg))'
     }),
 
     questionFontFamily: props.Text({
       name: 'Question Font Family',
       defaultValue: 'inherit',
-      group: 'Typography',
+      group: 'Question',
       tooltip: 'Question font family (e.g., "Inter", sans-serif or var(--font-body))'
     }),
 
     questionFontWeight: props.Text({
       name: 'Question Font Weight',
       defaultValue: 'inherit',
-      group: 'Typography',
+      group: 'Question',
       tooltip: 'Question font weight (e.g., 600 or var(--font-semibold))'
+    }),
+
+    questionPadding: props.Text({
+      name: 'Question Padding',
+      defaultValue: '16px',
+      group: 'Question',
+      tooltip: 'Padding for question area (e.g., 20px or var(--space-4))'
+    }),
+
+    // ANSWER GROUP
+    answerColor: props.Text({
+      name: 'Answer Color',
+      defaultValue: '#666666',
+      group: 'Answer',
+      tooltip: 'Answer text color (e.g., #666666 or var(--text-secondary))'
     }),
 
     answerFontSize: props.Text({
       name: 'Answer Font Size',
       defaultValue: '16px',
-      group: 'Typography',
+      group: 'Answer',
       tooltip: 'Answer font size (e.g., 16px or var(--font-base))'
     }),
 
     answerFontFamily: props.Text({
       name: 'Answer Font Family',
       defaultValue: 'inherit',
-      group: 'Typography',
+      group: 'Answer',
       tooltip: 'Answer font family (e.g., "Inter", sans-serif or var(--font-body))'
-    }),
-
-    // Spacing
-    itemGap: props.Text({
-      name: 'Item Gap',
-      defaultValue: '0px',
-      group: 'Spacing',
-      tooltip: 'Gap between FAQ items (e.g., 8px or var(--space-2))'
-    }),
-
-    questionPadding: props.Text({
-      name: 'Question Padding',
-      defaultValue: '16px',
-      group: 'Spacing',
-      tooltip: 'Padding for question area (e.g., 20px or var(--space-4))'
     }),
 
     answerPadding: props.Text({
       name: 'Answer Padding',
       defaultValue: '0 16px 16px 16px',
-      group: 'Spacing',
+      group: 'Answer',
       tooltip: 'Padding for answer area (e.g., 0 20px 20px 20px)'
-    }),
-
-    borderRadius: props.Text({
-      name: 'Border Radius',
-      defaultValue: '0px',
-      group: 'Spacing',
-      tooltip: 'Border radius for FAQ items (e.g., 8px or var(--radius-md))'
     })
   },
 

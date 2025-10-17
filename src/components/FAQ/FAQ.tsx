@@ -19,17 +19,27 @@ export interface FAQProps {
   /** Children slot for Collection List */
   children?: any;
 
-  // Style Props - Colors
+  // Style Props - Icon
+  /** Icon width (e.g., 24px or var(--icon-size)) */
+  iconWidth?: string;
+  /** Icon height (e.g., 24px or var(--icon-size)) */
+  iconHeight?: string;
+
+  // Style Props - Borders
   /** Border color for FAQ items (e.g., #e5e5e5 or var(--border-color)) */
   borderColor?: string;
+  /** Border width for all sides (e.g., 1px, 2px, 0) */
+  borderWidth?: string;
+  /** Border radius for FAQ items (e.g., 8px or var(--radius-md)) */
+  borderRadius?: string;
+
+  // Style Props - Colors
   /** Background color on hover (e.g., #f9f9f9 or var(--hover-bg)) */
   hoverColor?: string;
   /** Question text color (e.g., #000000 or var(--text-primary)) */
   questionColor?: string;
   /** Answer text color (e.g., #666666 or var(--text-secondary)) */
   answerColor?: string;
-  /** Chevron icon color (e.g., #000000 or var(--icon-color)) */
-  chevronColor?: string;
 
   // Style Props - Typography
   /** Question font size (e.g., 18px or var(--font-lg)) */
@@ -50,8 +60,6 @@ export interface FAQProps {
   questionPadding?: string;
   /** Padding for answer area (e.g., 0 20px 20px 20px) */
   answerPadding?: string;
-  /** Border radius for FAQ items (e.g., 8px or var(--radius-md)) */
-  borderRadius?: string;
 }
 
 const FAQ = ({
@@ -61,11 +69,14 @@ const FAQ = ({
   animationDuration = 0.3,
   children,
   // Style props with defaults
+  iconWidth = '24px',
+  iconHeight = '24px',
   borderColor = '#e5e5e5',
+  borderWidth = '1px',
+  borderRadius = '0px',
   hoverColor = '#f9f9f9',
   questionColor = '#000000',
   answerColor = '#666666',
-  chevronColor = '#000000',
   questionFontSize = 'inherit',
   questionFontFamily = 'inherit',
   questionFontWeight = 'inherit',
@@ -73,8 +84,7 @@ const FAQ = ({
   answerFontFamily = 'inherit',
   itemGap = '0px',
   questionPadding = '16px',
-  answerPadding = '0 16px 16px 16px',
-  borderRadius = '0px'
+  answerPadding = '0 16px 16px 16px'
 }: FAQProps) => {
   const [items, setItems] = useState<FAQItem[]>([]);
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
@@ -228,11 +238,14 @@ const FAQ = ({
     <div
       className="faq"
       style={{
+        '--faq-icon-width': iconWidth,
+        '--faq-icon-height': iconHeight,
         '--faq-border-color': borderColor,
+        '--faq-border-width': borderWidth,
+        '--faq-border-radius': borderRadius,
         '--faq-hover-color': hoverColor,
         '--faq-question-color': questionColor,
         '--faq-answer-color': answerColor,
-        '--faq-chevron-color': chevronColor,
         '--faq-question-font-size': questionFontSize,
         '--faq-question-font-family': questionFontFamily,
         '--faq-question-font-weight': questionFontWeight,
@@ -241,7 +254,6 @@ const FAQ = ({
         '--faq-item-gap': itemGap,
         '--faq-question-padding': questionPadding,
         '--faq-answer-padding': answerPadding,
-        '--faq-border-radius': borderRadius,
       } as React.CSSProperties}
     >
       {/* Hidden slot for Collection List */}
@@ -301,22 +313,7 @@ const FAQ = ({
                   }}
                 >
                   <span className="faq__icon" aria-hidden="true">
-                    {icon ? (
-                      <img src={icon} alt="" className="faq__icon-image" />
-                    ) : (
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="6 9 10 13 14 9"></polyline>
-                      </svg>
-                    )}
+                    <img src={icon} alt="" className="faq__icon-image" />
                   </span>
                 </button>
 

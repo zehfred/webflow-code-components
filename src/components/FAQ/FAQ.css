@@ -21,7 +21,7 @@
 /* ─────────────────────────────────────────────────────────────── */
 
 .faq__item {
-  border: 1px solid var(--faq-border-color, #e5e5e5);
+  border: var(--faq-border-width, 1px) solid var(--faq-border-color, #e5e5e5);
   border-radius: var(--faq-border-radius, 0px);
   transition: background-color 0.2s ease;
 }
@@ -74,12 +74,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: var(--faq-icon-width, 24px);
+  height: var(--faq-icon-height, 24px);
   margin-left: auto;
   margin-right: 1rem;
   transition: transform 0.3s ease;
-  color: var(--faq-chevron-color, #000000);
 }
 
 /* Custom icon image */
