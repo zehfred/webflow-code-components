@@ -44,6 +44,7 @@
   -webkit-appearance: none;
   -moz-appearance: none;
   overflow: hidden;
+  padding: var(--faq-question-padding, 16px);
 }
 
 .faq__trigger:hover {
@@ -60,7 +61,7 @@
   line-height: inherit;
   letter-spacing: inherit;
   margin: 0;
-  padding: var(--faq-question-padding, 16px);
+  padding: 0;
 }
 
 .faq__trigger:focus,
@@ -148,13 +149,12 @@
 /* ─────────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+  /* Remove hardcoded padding overrides - let CSS variables handle all padding */
   .faq__trigger {
-    padding: 14px 12px;
     font-size: 15px;
   }
 
   .faq__answer {
-    padding: 0 12px 14px 12px;
     font-size: 13px;
   }
 }
