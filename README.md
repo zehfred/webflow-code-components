@@ -33,8 +33,6 @@ npm install
    - **Recommended**: Use interactive CLI authentication when running `npx webflow library share` (CLI will open your browser)
    - **Alternative**: Create a `.env` file in the project root and add your Webflow API token: `WEBFLOW_WORKSPACE_API_TOKEN=your_token_here`
 
-## Development
-
 ### Local Development
 
 Start the development server to preview all components in an interactive showcase:
