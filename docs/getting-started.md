@@ -39,35 +39,43 @@ Create a `webflow.json` file in your project root:
 
 ### 3. Authenticate with Webflow
 
-#### Get Your Workspace API Token
+#### Interactive Authentication (Recommended)
 
-You need a Workspace API token to publish components:
+The easiest way to authenticate is to let the CLI handle it automatically:
 
-1. Open your Webflow workspace
-2. Navigate to **Apps & Integrations**
-3. Click **Manage** in the left sidebar
-4. Scroll to **Workspace API Access**
-5. Click **Generate API Token** and copy it
+1. **Run the share command:**
+   ```bash
+   npx webflow library share
+   ```
 
-**Note:** You must be a Workspace Admin to generate tokens.
+2. **If no token is found**, the CLI will:
+   - Open a browser window
+   - Ask you to authorize the workspace
+   - Save the token to `.env` automatically
 
-#### Add Token to .env
+**Note:** You must be a Workspace Admin to authorize.
 
-Create a `.env` file in your project root:
+#### Manual Authentication (Alternative)
 
-```bash
-WEBFLOW_WORKSPACE_API_TOKEN=your_token_here
-```
+For CI/CD pipelines or when you need manual control, set up the token yourself:
 
-**Security:** Always add `.env` to your `.gitignore` file.
+1. **Get your Workspace API token:**
+   - Open your Webflow workspace
+   - Navigate to **Apps & Integrations** → **Manage**
+   - Scroll to **Workspace API Access**
+   - Click **Generate API Token** and copy it
 
-#### Alternative: Manual Authentication
+2. **Add to `.env` file:**
+   ```bash
+   WEBFLOW_WORKSPACE_API_TOKEN=your_token_here
+   ```
 
-You can also authenticate via the CLI:
+   **Security:** Always add `.env` to your `.gitignore` file.
 
-```bash
-npx webflow library share --api-token <your-api-token>
-```
+3. **Or pass directly via CLI:**
+   ```bash
+   npx webflow library share --api-token <your-api-token>
+   ```
 
 ## Create Your First Component
 
