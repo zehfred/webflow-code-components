@@ -78,27 +78,34 @@ This library includes the following components. Click each link to view detailed
 
 ## AI-Powered Development with Claude Code
 
-**Most of the code in this repository was created using [Claude Code](https://claude.ai/code)**, an AI-powered development assistant. This project includes a custom Claude skill and comprehensive instructions that enable Claude to understand and build Webflow code components efficiently.
+**Most of the code in this repository was created using [Claude Code](https://claude.ai/code)**, an AI-powered development assistant. This project includes both a custom Claude skill and Webflow MCP server configuration to enable Claude to understand and work with Webflow efficiently.
+
+### Webflow MCP Server
+
+This repository includes an `.mcp.json` configuration file that connects Claude Code directly to Webflow's APIs through the Model Context Protocol (MCP). The MCP server enables Claude to:
+
+- **Designer API**: Create and modify elements, styles, components, and variables directly on the Webflow canvas with live preview
+- **Data API**: Manage CMS collections and items, localization, custom code, pages, and SEO settings
+- **Developer Documentation**: Query Webflow's official documentation without leaving your AI environment
+
+**Learn more**: [Webflow MCP Server Documentation](https://developers.webflow.com/data/docs/ai-tools)
 
 ### Using the Claude Skill
 
-If you use Claude Code, this repository includes a ready-to-use skill that accelerates Webflow component development:
+This project also includes a comprehensive Claude skill at `.claude/skills/webflow-code-components/` with detailed documentation about:
+- Webflow component architecture patterns
+- Prop types and configuration guides
+- Shadow DOM styling strategies
+- Component communication patterns
+- CLI reference and troubleshooting
 
-- **Skill location**: `.claude/skills/webflow-code-components/`
-- **Project instructions**: `CLAUDE.md` provides Claude with project-specific guidance
-- **What it includes**:
-  - Webflow component architecture patterns
-  - Prop types and configuration guides
-  - Shadow DOM styling strategies
-  - Component communication patterns
-  - CLI reference and troubleshooting
-
-To use this skill with Claude Code:
+To use these tools with Claude Code:
 1. Open this project in Claude Code
-2. The skill will automatically be available when working on Webflow components
-3. Reference `CLAUDE.md` for project conventions and patterns
+2. The MCP server will connect automatically (requires authentication on first use)
+3. The skill will be available when working on Webflow components
+4. Reference `CLAUDE.md` for project conventions and patterns
 
-This setup dramatically speeds up component development by giving Claude deep context about Webflow's requirements, best practices, and common patterns.
+This setup dramatically speeds up component development by giving Claude deep context about Webflow's requirements, best practices, and the ability to directly interact with your Webflow projects.
 
 ## Publishing to Webflow
 
