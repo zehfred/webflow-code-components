@@ -1,6 +1,6 @@
 # Creating Webflow Components from React Components
 
-A comprehensive guide to converting existing React components into Webflow code components using DevLink.
+A comprehensive, production-tested guide to building React code components for Webflow. This guide is based on real-world implementation patterns and solutions to actual issues encountered when building Webflow code components.
 
 ---
 
@@ -9,15 +9,22 @@ A comprehensive guide to converting existing React components into Webflow code 
 1. [Prerequisites](#prerequisites)
 2. [Project Setup](#project-setup)
 3. [Component Structure](#component-structure)
-4. [Creating a Webflow Component Definition](#creating-a-webflow-component-definition)
-5. [Available Prop Types](#available-prop-types)
-6. [Using Slots and Collection Lists](#using-slots-and-collection-lists)
-7. [Testing Your Components](#testing-your-components)
-8. [Publishing to Webflow](#publishing-to-webflow)
-9. [Best Practices](#best-practices)
-10. [Examples](#examples)
-11. [Troubleshooting](#troubleshooting)
-12. [Quick Reference](#quick-reference)
+4. [The Two Styling Approaches](#the-two-styling-approaches)
+   - [Approach 1: CSS Variables (Inherited)](#approach-1-css-variables-inherited-from-webflow)
+   - [Approach 2: Component Props](#approach-2-component-props-interface-properties)
+   - [Hybrid Approach](#hybrid-approach-best-of-both-worlds)
+5. [Critical Issues & Solutions](#critical-issues--solutions)
+6. [Component Options Reference](#component-options-reference)
+7. [Shadow DOM Deep Dive](#shadow-dom-deep-dive)
+8. [Available Prop Types](#available-prop-types)
+9. [Using Slots and Collection Lists](#using-slots-and-collection-lists)
+10. [Advanced Patterns](#advanced-patterns)
+11. [Real-World Examples](#real-world-examples)
+12. [Testing Your Components](#testing-your-components)
+13. [Publishing to Webflow](#publishing-to-webflow)
+14. [Troubleshooting](#troubleshooting)
+15. [Best Practices Checklist](#best-practices-checklist)
+16. [Quick Reference](#quick-reference)
 
 ---
 
@@ -72,19 +79,17 @@ Your project should follow this structure:
 
 ```
 src/
-├── components/
+├── component/
 │   ├── YourComponent.tsx          # Your React component
 │   ├── YourComponent.css          # Component styles
 │   └── YourComponent.webflow.tsx  # Webflow component definition
-└── webflow.json                    # Webflow configuration
+webflow.json                          # Webflow configuration
 ```
 
-### Example React Component
-
-Here's a simple React component that we'll convert to a Webflow component:
+### Basic Component Example
 
 ```tsx
-// Badge.tsx
+// component/Badge.tsx
 import React from 'react';
 import './Badge.css';
 
@@ -94,48 +99,13 @@ interface BadgeProps {
 }
 
 export const Badge: React.FC<BadgeProps> = ({ text, variant }) => (
-  <span
-    style={{
-      backgroundColor: variant === 'Light' ? '#eee' : '#000',
-      borderRadius: '1em',
-      color: variant === 'Light' ? '#000' : '#fff',
-      display: 'inline-block',
-      fontSize: '14px',
-      lineHeight: 2,
-      padding: '0 1em',
-    }}
-  >
+  <span className={`badge badge--${variant.toLowerCase()}`}>
     {text}
   </span>
 );
 ```
 
----
-
-## Creating a Webflow Component Definition
-
-To make a React component available in Webflow, you need to create a `.webflow.tsx` file that declares the component and its props.
-
-### Basic Structure
-
-Create a file named `YourComponent.webflow.tsx` alongside your component:
-
-```tsx
-import YourComponent from './YourComponent';
-import { props } from '@webflow/data-types';
-import { declareComponent } from '@webflow/react';
-
-export default declareComponent(YourComponent, {
-  name: 'YourComponent',
-  description: 'A brief description of what this component does',
-  group: 'Category',
-  props: {
-    // Define your props here
-  },
-});
-```
-
-### Badge Example
+### Basic Webflow Definition
 
 ```tsx
 // Badge.webflow.tsx
@@ -158,25 +128,1075 @@ export default declareComponent(Badge, {
       defaultValue: "Light",
     }),
   },
+  options: {
+    applyTagSelectors: false,
+    ssr: true,
+  },
 });
+```
+
+---
+
+## The Two Styling Approaches
+
+**Key Insight from Webflow**: There are two official, recommended approaches to styling Webflow code components. Understanding when to use each is critical for building maintainable components.
+
+### Decision Matrix: Which Approach to Use?
+
+| Use Case | Recommended Approach | Reason |
+|----------|---------------------|---------|
+| Brand colors, spacing, typography | CSS Variables | Centralized design system, easy global updates |
+| Dynamic content styling | Component Props | Direct control, discoverable in UI |
+| Advanced theming | CSS Variables | Designers can override without touching code |
+| Animation parameters | Component Props | Clear controls, validation with min/max |
+| Layout options | Component Props | Explicit options in dropdown |
+| Responsive sizing | CSS Variables | Consistent across site |
+
+---
+
+### Approach 1: CSS Variables (Inherited from Webflow)
+
+**Official Recommendation**: Use CSS Variables for design tokens like colors, spacing, and typography.
+
+#### How It Works
+
+CSS variables defined at the `:root` level in Webflow's Variables panel **automatically inherit** through Shadow DOM boundaries. This is confirmed by Webflow's official documentation.
+
+#### Setting Up CSS Variables
+
+**In Webflow Designer:**
+
+1. Open your Webflow project
+2. Go to **Style Panel** → **Variables** (or Project Settings → Variables)
+3. Create variables for your component:
+   - `--faq-question-color` → `#1a1a1a`
+   - `--faq-question-font-size` → `18px`
+   - `--faq-answer-color` → `#666666`
+   - `--faq-border-radius` → `8px`
+4. Use "Copy CSS" from the three-dot menu to get exact variable names
+
+**In Your Component CSS:**
+
+```css
+/* FAQ.css */
+
+/* ⚠️ CRITICAL: Do NOT define :host variables here!
+   They will override inherited :root values from Webflow.
+   Instead, use fallback values directly in var() declarations. */
+
+.faq__item {
+  border: 1px solid var(--faq-toggle-border-color, #e5e5e5);
+  border-radius: var(--faq-border-radius, 0px);
+}
+
+.faq__trigger [data-faq-question] {
+  font-family: var(--faq-question-font-family, inherit);
+  font-size: var(--faq-question-font-size, inherit);
+  font-weight: var(--faq-question-font-weight, inherit);
+  color: var(--faq-question-color, #000000);
+  padding: var(--faq-question-padding, 16px);
+}
+
+.faq__answer {
+  color: var(--faq-answer-color, #000000);
+  font-size: var(--faq-answer-font-size, 16px);
+  padding: var(--faq-answer-padding, 0 16px 16px 16px);
+}
+```
+
+**In Your Component:**
+
+```tsx
+// FAQ.tsx - No style props needed!
+interface FAQProps {
+  type?: 'single' | 'multiple';
+  defaultOpenIndex?: number;
+  children?: any;
+  // No backgroundColor, textColor, fontSize props!
+}
+
+const FAQ = ({ type = 'single', defaultOpenIndex = 0, children }: FAQProps) => {
+  // Component logic...
+  return (
+    <div className="faq">
+      {/* Styles come from CSS variables, not props */}
+    </div>
+  );
+};
+```
+
+#### Real-World Example: FAQ Component
+
+This is from an actual production component in this project:
+
+```tsx
+// FAQ.webflow.tsx
+export default declareComponent(FAQ, {
+  name: 'FAQ Accordion',
+  description: 'An accessible accordion. Styling is controlled via Webflow CSS Variables.',
+  group: 'Interactive',
+  props: {
+    // Behavior props only - no styling props!
+    children: props.Slot({
+      name: 'FAQ Items',
+      tooltip: 'Add a Collection List with data-faq-question and data-faq-answer attributes.'
+    }),
+    type: props.Text({
+      name: 'Accordion Type',
+      defaultValue: 'single',
+    }),
+    animationDuration: props.Number({
+      name: 'Animation Speed',
+      defaultValue: 0.3,
+      min: 0.1,
+      max: 2,
+    })
+  },
+  options: {
+    applyTagSelectors: false,
+    ssr: false
+  }
+});
+```
+
+#### Pros & Cons
+
+**✅ Pros:**
+- Clean separation of concerns (design vs behavior)
+- Centralized design system
+- Designers can update colors/spacing globally without touching component code
+- Less prop clutter in component interface
+- Inherits from Webflow's design system automatically
+
+**❌ Cons:**
+- Requires users to know CSS variable names
+- Not discoverable in component properties panel
+- Requires documentation to explain which variables are available
+- Users must go to Variables panel separately
+
+**When to Use:**
+- Brand colors, background colors, text colors
+- Spacing (padding, margin, gap)
+- Typography (font-family, font-size, font-weight)
+- Border radius, borders
+- Any value that should be consistent across multiple components
+
+---
+
+### Approach 2: Component Props (Interface Properties)
+
+**Official Recommendation**: Use component props for dynamic content and behavior.
+
+#### How It Works
+
+Accept styling values as props in your component's interface, making them visible and configurable in Webflow's properties panel.
+
+#### Implementation
+
+```tsx
+// Particles.tsx
+interface ParticlesProps {
+  particleCount?: number;
+  particleBaseSize?: number;
+  itemBackgroundColor?: string;  // Style prop
+  borderRadius?: string;          // Style prop
+}
+
+const Particles: React.FC<ParticlesProps> = ({
+  particleCount = 200,
+  particleBaseSize = 100,
+  itemBackgroundColor = '#111',
+  borderRadius = '10px'
+}) => {
+  return (
+    <div
+      className="particle-item"
+      style={{
+        backgroundColor: itemBackgroundColor,
+        borderRadius: borderRadius
+      }}
+    >
+      {/* Component content */}
+    </div>
+  );
+};
+```
+
+```tsx
+// Particles.webflow.tsx
+export default declareComponent(Particles, {
+  name: 'Particles Background',
+  description: 'WebGL particle system with customizable colors',
+  group: 'Interactive',
+  props: {
+    particleCount: props.Number({
+      name: 'Particle Count',
+      defaultValue: 200,
+      min: 10,
+      max: 1000,
+      group: 'Content'
+    }),
+    itemBackgroundColor: props.Text({
+      name: 'Background Color',
+      defaultValue: '#111',
+      group: 'Style',
+      tooltip: 'Hex color for particle background'
+    }),
+    borderRadius: props.Text({
+      name: 'Border Radius',
+      defaultValue: '10px',
+      group: 'Style',
+      tooltip: 'CSS border-radius value'
+    })
+  },
+  options: {
+    applyTagSelectors: false,
+    ssr: false
+  }
+});
+```
+
+#### Organizing Props
+
+Use the `group` parameter to organize props into logical sections:
+
+```tsx
+props: {
+  // Content group
+  particleCount: props.Number({
+    name: 'Particle Count',
+    defaultValue: 200,
+    group: 'Content'
+  }),
+
+  // Style group
+  backgroundColor: props.Text({
+    name: 'Background Color',
+    defaultValue: '#000',
+    group: 'Style'
+  }),
+
+  // Animation group
+  speed: props.Number({
+    name: 'Speed',
+    defaultValue: 0.1,
+    group: 'Animation'
+  })
+}
+```
+
+#### Pros & Cons
+
+**✅ Pros:**
+- Discoverable in Webflow UI - users see all options
+- Clear documentation with tooltips
+- Type-safe with validation (min/max for numbers)
+- Organized into groups
+- Immediate visual feedback
+
+**❌ Cons:**
+- Can clutter the interface with many props
+- Harder to maintain design system consistency
+- Each component defines its own colors (no central theme)
+- More props to manage and document
+
+**When to Use:**
+- Animation parameters (speed, duration, delay)
+- Content configuration (count, size, layout)
+- Component-specific styling that shouldn't be global
+- When you need validation (min/max values)
+- When discoverability is more important than centralization
+
+---
+
+### Hybrid Approach: Best of Both Worlds
+
+**Recommended Pattern**: Combine both approaches for maximum flexibility.
+
+#### Strategy
+
+1. **Use Props for**: Primary controls, behavior, content configuration
+2. **Use CSS Variables for**: Colors, spacing, typography, global design tokens
+3. **Document both**: Explain which variables are available for advanced theming
+
+#### Real Example: GridMotion Component
+
+From this project - notice how it combines both approaches:
+
+```tsx
+// GridMotion.webflow.tsx
+export default declareComponent(GridMotion, {
+  name: 'Tilted Image Grid',
+  description: 'Interactive 4×7 grid that reacts to mouse. Uses CSS variables for item styling.',
+  group: 'Interactive',
+  props: {
+    // SLOT: For Collection List (primary UX)
+    children: props.Slot({
+      name: 'Images',
+      tooltip: 'Add a Collection List with images here.'
+    }),
+
+    // PROPS: Animation behavior (not themeable)
+    rotationAngle: props.Number({
+      name: 'Rotation Angle',
+      defaultValue: -15,
+      min: -45,
+      max: 45,
+      group: 'Animation'
+    }),
+    maxMoveAmount: props.Number({
+      name: 'Movement Intensity',
+      defaultValue: 300,
+      min: 0,
+      max: 1000,
+      group: 'Animation'
+    }),
+
+    // PROPS: Fallback styling (for initial setup)
+    gradientColor: props.Text({
+      name: 'Gradient Color',
+      defaultValue: 'black',
+      group: 'Style',
+      tooltip: 'Background gradient. Can also use --grid-gradient-color variable.'
+    }),
+    itemBackgroundColor: props.Text({
+      name: 'Item Background',
+      defaultValue: '#111',
+      group: 'Style',
+      tooltip: 'Card background. Can also use --grid-item-bg variable.'
+    })
+  }
+});
+```
+
+**CSS allows override via variables:**
+
+```css
+/* GridMotion.css */
+.grid-item {
+  /* Props provide defaults, CSS variables can override */
+  background-color: var(--grid-item-bg, var(--item-bg-from-props));
+  border-radius: var(--grid-item-radius, 10px);
+}
+```
+
+**Component applies both:**
+
+```tsx
+// GridMotion.tsx
+const GridMotion = ({
+  itemBackgroundColor = '#111',
+  borderRadius = '10px',
+  ...otherProps
+}) => {
+  return (
+    <div
+      className="grid-item"
+      style={{
+        // Props set CSS custom properties
+        ['--item-bg-from-props' as any]: itemBackgroundColor,
+        borderRadius: borderRadius
+      }}
+    >
+      {/* Content */}
+    </div>
+  );
+};
+```
+
+#### Benefits of Hybrid
+
+- ✅ Works out-of-the-box with prop defaults
+- ✅ Advanced users can override with CSS variables
+- ✅ Discoverability via props panel
+- ✅ Global theming via variables panel
+- ✅ Flexibility for different user skill levels
+
+---
+
+## Critical Issues & Solutions
+
+These are **real issues** encountered in production. Understanding these will save you hours of debugging.
+
+### Issue 1: Mouse Event Handling in Webflow
+
+**Problem:** Container-level mouse events (`mousemove`, `mouseenter`, etc.) don't fire reliably in Webflow due to Shadow DOM, z-index stacking, and element layering.
+
+**Symptoms:**
+- Mouse tracking works in local dev but breaks in Webflow
+- Events fire inconsistently or not at all
+- Movement detection is laggy or missing
+
+**❌ What Doesn't Work:**
+
+```tsx
+// DON'T DO THIS - unreliable in Webflow
+useEffect(() => {
+  const container = containerRef.current;
+  if (!container) return;
+
+  const handleMouseMove = (e: MouseEvent) => {
+    // This may not fire reliably in Webflow!
+    const x = e.clientX;
+    const y = e.clientY;
+  };
+
+  container.addEventListener('mousemove', handleMouseMove);
+
+  return () => {
+    container.removeEventListener('mousemove', handleMouseMove);
+  };
+}, []);
+```
+
+**✅ What Works:**
+
+```tsx
+// DO THIS - use window-level listeners
+useEffect(() => {
+  const container = containerRef.current;
+  if (!container) return;
+
+  const handleMouseMove = (e: PointerEvent) => {
+    // Calculate relative position to container
+    const rect = container.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;  // Normalized -1 to 1
+    const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+
+    // Clamp values to prevent extreme movements
+    const clampedX = Math.max(-1, Math.min(1, x));
+    const clampedY = Math.max(-1, Math.min(1, y));
+
+    // Use normalized coordinates
+    updatePosition(clampedX, clampedY);
+  };
+
+  // Attach to window, not container
+  window.addEventListener('pointermove', handleMouseMove);
+
+  return () => {
+    window.removeEventListener('pointermove', handleMouseMove);
+  };
+}, []);
+```
+
+**Key Points:**
+- Use `window.addEventListener` instead of container-level listeners
+- Use `pointermove` (modern) instead of `mousemove`
+- Calculate relative coordinates using `getBoundingClientRect()`
+- Always clamp normalized values to prevent edge cases
+
+**Real Example:** See [Particles.tsx:166-176](src/components/Particles.tsx#L166-L176)
+
+---
+
+### Issue 2: Mouse Enter/Leave Tracking
+
+**Problem:** Components continue animating or updating even when the mouse is outside the component area, causing unnecessary performance overhead and incorrect behavior.
+
+**Symptoms:**
+- Animations run constantly even when mouse is far away
+- High CPU usage
+- Particles/elements move when they shouldn't
+
+**❌ What Doesn't Work:**
+
+```tsx
+// Mouse tracking runs all the time, even when mouse is not over component
+useEffect(() => {
+  const handleMouseMove = (e: PointerEvent) => {
+    // This runs constantly, consuming resources
+    updateAnimation(e.clientX, e.clientY);
+  };
+
+  window.addEventListener('pointermove', handleMouseMove);
+
+  return () => {
+    window.removeEventListener('pointermove', handleMouseMove);
+  };
+}, []);
+```
+
+**✅ What Works:**
+
+```tsx
+// Track when mouse enters/leaves component area
+const isMouseInsideRef = useRef(false);
+
+useEffect(() => {
+  const container = containerRef.current;
+  if (!container) return;
+
+  const handleMouseEnter = () => {
+    isMouseInsideRef.current = true;
+  };
+
+  const handleMouseLeave = () => {
+    isMouseInsideRef.current = false;
+    // Reset to default state when mouse leaves
+    resetToCenter();
+  };
+
+  const handleMouseMove = (e: PointerEvent) => {
+    // Only process if mouse is inside component
+    if (!isMouseInsideRef.current) return;
+
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    updateAnimation(x, y);
+  };
+
+  // Enter/leave listeners on container (these work fine)
+  container.addEventListener('mouseenter', handleMouseEnter);
+  container.addEventListener('mouseleave', handleMouseLeave);
+
+  // Move listener on window (for reliable tracking)
+  window.addEventListener('pointermove', handleMouseMove);
+
+  return () => {
+    container.removeEventListener('mouseenter', handleMouseEnter);
+    container.removeEventListener('mouseleave', handleMouseLeave);
+    window.removeEventListener('pointermove', handleMouseMove);
+  };
+}, []);
+```
+
+**Key Points:**
+- Use a ref to track mouse inside/outside state
+- `mouseenter` and `mouseleave` work reliably on container
+- Early return in `mousemove` handler if mouse is outside
+- Reset state when mouse leaves (prevents stuck states)
+- Significantly improves performance
+
+**Real Example:** See [DotGrid.tsx:297-307](src/components/DotGrid.tsx#L297-L307)
+
+---
+
+### Issue 3: Shadow DOM Slot Content Extraction
+
+**Problem:** Collection List content placed in a slot is not accessible via normal DOM queries due to Shadow DOM encapsulation.
+
+**Symptoms:**
+- `querySelector('img')` returns empty array
+- Content exists visually but can't be accessed programmatically
+- State never updates with extracted content
+
+**❌ What Doesn't Work:**
+
+```tsx
+// Direct queries don't see slotted content
+const slotRef = useRef(null);
+
+useEffect(() => {
+  // This won't find slotted content!
+  const images = slotRef.current.querySelectorAll('img');
+  console.log(images.length); // 0 (even if images are visible)
+}, [children]);
+```
+
+**✅ What Works - Multi-Strategy Extraction:**
+
+```tsx
+const slotRef = useRef(null);
+const [extractedImages, setExtractedImages] = useState<string[]>([]);
+
+useEffect(() => {
+  const extractImages = () => {
+    if (!slotRef.current) return;
+
+    let searchContainer: HTMLElement | null = null;
+
+    // STRATEGY 1: Find slot element in Shadow DOM
+    let slotElement = slotRef.current.querySelector('slot');
+
+    // STRATEGY 2: Try shadow root if direct query fails
+    if (!slotElement && slotRef.current.getRootNode) {
+      const root: any = slotRef.current.getRootNode();
+      if (root && root.host) {
+        slotElement = root.querySelector('slot[name="children"]') || root.querySelector('slot');
+      }
+    }
+
+    if (slotElement) {
+      // STRATEGY 3: Use assignedElements to get slotted content
+      const assignedElements = (slotElement as any).assignedElements?.({ flatten: true }) || [];
+      const imgElements: HTMLImageElement[] = [];
+
+      // STRATEGY 4: Search within assigned elements
+      assignedElements.forEach((element: any) => {
+        if (element.tagName === 'IMG') {
+          // Direct image
+          imgElements.push(element as HTMLImageElement);
+        } else {
+          // Search for images within Collection List items
+          const imgs: NodeListOf<HTMLImageElement> = element.querySelectorAll('img');
+          Array.from(imgs).forEach(img => imgElements.push(img));
+        }
+      });
+
+      const imageUrls = imgElements.map(img => img.src).filter(src => src);
+      if (imageUrls.length > 0) {
+        setExtractedImages(imageUrls);
+      }
+    } else {
+      // STRATEGY 5: Fallback to regular DOM (non-Shadow environments)
+      const imgElements = slotRef.current.querySelectorAll('img');
+      const imageUrls = Array.from(imgElements).map((img: any) => img.src).filter((src: string) => src);
+      if (imageUrls.length > 0) {
+        setExtractedImages(imageUrls);
+      }
+    }
+  };
+
+  // STRATEGY 6: Try immediately
+  extractImages();
+
+  // STRATEGY 7: Try with increasing delays (DOM may not be ready)
+  const timeout1 = setTimeout(extractImages, 100);
+  const timeout2 = setTimeout(extractImages, 300);
+  const timeout3 = setTimeout(extractImages, 1000);
+
+  // STRATEGY 8: Listen for slot changes
+  if (slotRef.current) {
+    const slotElement = slotRef.current.querySelector('slot');
+    if (slotElement) {
+      const handleSlotChange = () => extractImages();
+      (slotElement as any).addEventListener?.('slotchange', handleSlotChange);
+
+      return () => {
+        clearTimeout(timeout1);
+        clearTimeout(timeout2);
+        clearTimeout(timeout3);
+        (slotElement as any).removeEventListener?.('slotchange', handleSlotChange);
+      };
+    }
+  }
+
+  return () => {
+    clearTimeout(timeout1);
+    clearTimeout(timeout2);
+    clearTimeout(timeout3);
+  };
+}, [children]);
+```
+
+**Key Points:**
+- Query for `<slot>` element, not for content directly
+- Use `assignedElements({ flatten: true })` to get slotted content
+- Try multiple approaches (shadow root, regular DOM)
+- Use multiple timeouts (100ms, 300ms, 1000ms) - content may not be ready immediately
+- Listen for `slotchange` events to catch dynamic updates
+- Always filter out empty/undefined values
+
+**Real Example:** See [GridMotion.tsx:46-120](src/components/GridMotion.tsx#L46-L120)
+
+---
+
+### Issue 4: Prop Type Limitations
+
+**Problem:** Webflow doesn't provide native Boolean, Array, or Color picker prop types.
+
+**Symptoms:**
+- `props.Boolean()` throws error or doesn't exist
+- No way to pass arrays
+- Can't validate colors
+
+**✅ Workaround Patterns:**
+
+#### Boolean Props
+
+```tsx
+// ✅ In .webflow.tsx
+moveOnHover: props.Text({
+  name: 'Move On Hover',
+  defaultValue: '0',  // "0" = false, "1" = true
+  tooltip: 'Set to 1 to enable, 0 to disable'
+})
+
+// ✅ In .tsx (component)
+interface MyComponentProps {
+  moveOnHover?: boolean | string;  // Accept both types
+}
+
+const MyComponent = ({ moveOnHover = false }: MyComponentProps) => {
+  // Parse string to boolean
+  const parsedMoveOnHover = typeof moveOnHover === 'string'
+    ? moveOnHover === '1'
+    : moveOnHover;
+
+  if (parsedMoveOnHover) {
+    // Use boolean value
+  }
+};
+```
+
+#### Array Props (Colors, Lists)
+
+```tsx
+// ✅ In .webflow.tsx
+particleColors: props.Text({
+  name: 'Particle Colors',
+  defaultValue: '#ffffff,#ff0000,#00ff00',
+  tooltip: 'Comma-separated hex colors'
+})
+
+// ✅ In .tsx (component)
+interface MyComponentProps {
+  particleColors?: string | string[];  // Accept both types
+}
+
+const MyComponent = ({ particleColors }: MyComponentProps) => {
+  // Parse comma-separated string to array
+  const parsedColors = typeof particleColors === 'string'
+    ? particleColors.split(',').map(c => c.trim()).filter(Boolean)
+    : particleColors;
+
+  parsedColors?.forEach(color => {
+    // Use array of colors
+  });
+};
+```
+
+**Real Example:** See [Particles.tsx:119-125](src/components/Particles.tsx#L119-L125)
+
+---
+
+### Issue 5: SSR and Browser APIs
+
+**Problem:** Components using browser-only APIs (WebGL, Canvas, `window`, `document`) crash during server-side rendering.
+
+**Symptoms:**
+- `window is not defined` errors
+- `document is not defined` errors
+- Canvas/WebGL context errors during build
+
+**✅ Solution:**
+
+```tsx
+// In .webflow.tsx
+export default declareComponent(MyComponent, {
+  name: 'My Component',
+  options: {
+    ssr: false  // Disable server-side rendering
+  }
+});
+```
+
+**When to Disable SSR:**
+- WebGL components (three.js, OGL, etc.)
+- Canvas-based animations
+- Components using `window`, `document`, `localStorage`
+- Real-time data components
+- User-specific dashboards
+
+**When to Keep SSR Enabled:**
+- Static content components
+- SEO-important content
+- Components that benefit from initial HTML
+
+**Real Example:** All interactive components in this project have `ssr: false`
+
+---
+
+## Component Options Reference
+
+Configure component behavior with the `options` object in your Webflow declaration.
+
+### Available Options
+
+```tsx
+export default declareComponent(MyComponent, {
+  name: 'My Component',
+  description: 'Component description',
+  group: 'Category',
+  props: { /* ... */ },
+  options: {
+    // Server-side rendering
+    ssr: false,
+
+    // Tag selector inheritance
+    applyTagSelectors: false,
+  }
+});
+```
+
+---
+
+### `ssr: boolean`
+
+**Default:** `true`
+
+Controls whether the component is server-side rendered.
+
+**Set to `false` when:**
+- Component uses `window`, `document`, `localStorage`, `sessionStorage`
+- Component uses browser APIs: Canvas, WebGL, Web Audio, Geolocation
+- Component uses third-party libraries that require browser environment
+- Component has user-specific content that shouldn't be in initial HTML
+- Component is purely interactive with no SEO benefit
+
+**Set to `true` (default) when:**
+- Component renders static content
+- Component benefits from initial HTML for SEO
+- Component doesn't use browser-specific APIs
+- First paint performance matters
+
+```tsx
+// Example: WebGL component (requires browser)
+export default declareComponent(Particles, {
+  name: 'Particles',
+  options: {
+    ssr: false  // Uses WebGL - browser only
+  }
+});
+
+// Example: Static content component
+export default declareComponent(Badge, {
+  name: 'Badge',
+  options: {
+    ssr: true  // Can render on server
+  }
+});
+```
+
+---
+
+### `applyTagSelectors: boolean`
+
+**Default:** `false`
+
+Controls whether Webflow's site-wide tag selectors (styles applied to `h1`, `p`, `button`, etc.) should automatically apply to your component's HTML tags.
+
+**Set to `false` (default) when:**
+- You want complete style isolation
+- You want your component to look identical across all sites
+- Site styles might conflict with your component's design
+- You're providing a branded/designed component
+
+**Set to `true` when:**
+- You want your component to inherit site typography
+- You want buttons/headings to match site styles
+- You're building a component that should feel native to each site
+- Consistency with site design is more important than component isolation
+
+```tsx
+// Example: Isolated component
+export default declareComponent(CustomButton, {
+  name: 'Custom Button',
+  options: {
+    applyTagSelectors: false  // Don't inherit site button styles
+  }
+});
+
+// Example: Site-adaptive component
+export default declareComponent(ContentCard, {
+  name: 'Content Card',
+  options: {
+    applyTagSelectors: true  // Inherit site h1, p, button styles
+  }
+});
+```
+
+**Visual Example:**
+
+```tsx
+// With applyTagSelectors: false
+<h1>My Heading</h1>  // Uses component's own styles only
+
+// With applyTagSelectors: true
+<h1>My Heading</h1>  // Inherits font-family, font-size, color from site's h1 tag selector
+```
+
+---
+
+### Prop Organization Options
+
+Use these in individual prop definitions:
+
+```tsx
+props: {
+  myProp: props.Number({
+    name: 'My Prop',           // Display name in UI
+    defaultValue: 100,          // Default value
+    min: 0,                     // Minimum value (Number only)
+    max: 1000,                  // Maximum value (Number only)
+    decimals: 1,                // Decimal places (Number only)
+    group: 'Animation',         // Group in properties panel
+    tooltip: 'Controls speed'   // Tooltip on hover
+  })
+}
+```
+
+**Groups organize props** into collapsible sections:
+
+```tsx
+props: {
+  // Content group
+  title: props.Text({
+    name: 'Title',
+    group: 'Content'
+  }),
+  description: props.Text({
+    name: 'Description',
+    group: 'Content'
+  }),
+
+  // Style group
+  backgroundColor: props.Text({
+    name: 'Background',
+    group: 'Style'
+  }),
+
+  // Animation group
+  speed: props.Number({
+    name: 'Speed',
+    group: 'Animation'
+  })
+}
+```
+
+---
+
+## Shadow DOM Deep Dive
+
+Understanding Shadow DOM is **critical** for building Webflow components. Shadow DOM affects styling, event handling, and content extraction.
+
+### What is Shadow DOM?
+
+Shadow DOM creates an isolated DOM subtree that:
+- Has its own scope for styles (styles don't leak in or out)
+- Has its own scope for IDs (no ID conflicts)
+- Provides encapsulation (component internals are hidden)
+
+**Why Webflow Uses Shadow DOM:**
+- Prevents your component styles from affecting the page
+- Prevents page styles from breaking your component
+- Allows same component to be used multiple times without conflicts
+- Creates portable, self-contained components
+
+### How Shadow DOM Affects Your Component
+
+#### 1. Style Isolation
+
+```css
+/* ❌ External styles DON'T affect your component */
+.my-class {
+  color: red;  /* Won't apply to elements inside your component */
+}
+
+/* ✅ Your component styles DON'T affect the page */
+.my-class {
+  color: blue;  /* Only affects elements in your component */
+}
+```
+
+#### 2. CSS Variables DOPASS Through
+
+```css
+/* ✅ CSS Variables defined at :root INHERIT into Shadow DOM */
+:root {
+  --brand-color: #0066cc;
+}
+
+/* Inside your component */
+.button {
+  background: var(--brand-color);  /* This works! */
+}
+```
+
+**Critical:** Do NOT redefine variables with `:host` in component CSS:
+
+```css
+/* ❌ DON'T DO THIS - overrides inherited values */
+:host {
+  --brand-color: #000000;  /* Overrides Webflow's value! */
+}
+
+/* ✅ DO THIS - use fallback values instead */
+.button {
+  background: var(--brand-color, #0066cc);  /* Inherits or falls back */
+}
+```
+
+#### 3. Inherited CSS Properties Work
+
+Some CSS properties inherit through Shadow DOM boundaries:
+
+```css
+/* These properties inherit from parent */
+font-family: inherit;  /* ✅ Works */
+font-size: inherit;    /* ✅ Works */
+color: inherit;        /* ✅ Works */
+line-height: inherit;  /* ✅ Works */
+```
+
+Example:
+
+```tsx
+// If component is inside a div with font-family: 'Inter'
+<div style="font-family: 'Inter', sans-serif">
+  <my-component>
+    <!-- This will use Inter font if set to inherit -->
+    <p style="font-family: inherit">Text</p>
+  </my-component>
+</div>
+```
+
+#### 4. Slot Content Lives in Light DOM
+
+When you use `props.Slot()`, the content placed in the slot remains in the "light DOM" (the regular DOM), not the Shadow DOM. This is why you need special techniques to access it:
+
+```tsx
+// Slot container in your component (Shadow DOM)
+<div ref={slotRef}>
+  {children}
+</div>
+
+// Content placed in slot (Light DOM - lives outside Shadow DOM)
+<img src="photo.jpg" />
+<div class="collection-item">
+  <img src="photo2.jpg" />
+</div>
+```
+
+To access slot content, you must:
+1. Find the `<slot>` element
+2. Use `assignedElements()` to get the light DOM content
+
+```tsx
+const slotElement = slotRef.current.querySelector('slot');
+const lightDOMContent = slotElement.assignedElements({ flatten: true });
 ```
 
 ---
 
 ## Available Prop Types
 
-Webflow provides several prop types that you can use to create configurable components. Here's a comprehensive list:
+Webflow provides several prop types for configuring components:
 
 ### Text
 
 For string inputs:
 
 ```tsx
-text: props.Text({
-  name: "Text",
+title: props.Text({
+  name: "Title",
   defaultValue: "Default text",
+  group: "Content",
+  tooltip: "The main heading"
 })
 ```
+
+**Use for:**
+- Text content
+- URLs
+- Color values (hex codes)
+- CSS values (e.g., "10px", "1rem")
+- Comma-separated lists
+- Boolean values as "0"/"1"
+
+---
 
 ### Number
 
@@ -188,10 +1208,26 @@ count: props.Number({
   defaultValue: 100,
   min: 0,
   max: 1000,
+  decimals: 0,
+  group: "Settings"
 })
 ```
 
-### Variant (Select)
+**Parameters:**
+- `min`: Minimum value (optional)
+- `max`: Maximum value (optional)
+- `decimals`: Number of decimal places (optional, default: 0)
+
+**Use for:**
+- Counts, quantities
+- Pixel values
+- Animation speeds
+- Percentages (0-100)
+- Angles (0-360)
+
+---
+
+### Variant
 
 For dropdown selection:
 
@@ -200,237 +1236,226 @@ size: props.Variant({
   name: "Size",
   options: ["Small", "Medium", "Large"],
   defaultValue: "Medium",
+  group: "Style"
 })
 ```
 
-### Color
+**Use for:**
+- Style variants
+- Layout options
+- Predefined choices
+- Enum-like values
 
-For color picker (Note: Webflow may not support all advanced prop types. Stick to basic types):
-
-```tsx
-// Use Text for colors and validate in your component
-backgroundColor: props.Text({
-  name: "Background Color",
-  defaultValue: "#ffffff",
-})
-```
-
-### Boolean Props
-
-Webflow doesn't have a native checkbox or boolean prop type. Use Text props with "0" or "1" values:
-
-```tsx
-// In your .webflow.tsx file
-moveOnHover: props.Text({
-  name: "Move On Hover",
-  defaultValue: "0",  // "0" = false, "1" = true
-})
-```
-
-Then parse in your React component:
-
-```tsx
-// In your .tsx file
-interface MyComponentProps {
-  moveOnHover?: boolean | string;  // Accept both types
-}
-
-const MyComponent: React.FC<MyComponentProps> = ({
-  moveOnHover = false
-}) => {
-  // Parse string to boolean
-  const parsedMoveOnHover = typeof moveOnHover === 'string' 
-    ? moveOnHover === '1' 
-    : moveOnHover;
-  
-  // Use parsedMoveOnHover in your logic
-  if (parsedMoveOnHover) {
-    // ...
-  }
-};
-```
-
-### Array Props (Colors, Lists, etc.)
-
-For array props like color palettes, use a single Text prop with comma-separated values:
-
-```tsx
-// In your .webflow.tsx file
-particleColors: props.Text({
-  name: "Particle Colors",
-  defaultValue: "#ffffff,#ff0000,#00ff00",
-})
-```
-
-Parse in your React component:
+**Note:** Values are strings. In your TypeScript interface:
 
 ```tsx
 interface MyComponentProps {
-  particleColors?: string | string[];  // Accept both types
+  size?: 'Small' | 'Medium' | 'Large';
 }
-
-const MyComponent: React.FC<MyComponentProps> = ({
-  particleColors
-}) => {
-  // Parse comma-separated string to array
-  const parsedColors = typeof particleColors === 'string' 
-    ? particleColors.split(',').map(c => c.trim()).filter(Boolean)
-    : particleColors;
-  
-  // Use parsedColors array
-  parsedColors?.forEach(color => {
-    // ...
-  });
-};
 ```
-
-This approach allows users to enter:
-- Single value: `"#ff0000"`
-- Multiple values: `"#ff0000,#00ff00,#0000ff"`
-- The component adapts to however many values are provided
-
-### Important Notes on Props
-
-1. **Keep it simple**: Webflow best supports Text, Number, and Variant prop types
-2. **No descriptions on prop fields**: The API doesn't support description fields within prop definitions
-3. **Boolean values**: Use Text with "0"/"1" and parse to boolean in your component
-4. **Arrays**: Use comma-separated Text values and parse to arrays in your component
-5. **Dual type support**: Always accept both the native type and string type in your TypeScript interface
 
 ---
 
-## Using Slots and Collection Lists
+### Slot
 
-Slots are a powerful feature that allows users to place content (including Webflow Collection Lists) inside your components. This is perfect for creating components that need to work with dynamic CMS data.
-
-### What are Slots?
-
-Slots let users drop Webflow elements, Collection Lists, or other components directly into your component. Think of them as "content areas" that designers can fill in the Webflow Designer.
-
-### Declaring a Slot
-
-To add a slot to your component, use `props.Slot()` in your Webflow component definition:
+For content areas where users can place elements:
 
 ```tsx
-// YourComponent.webflow.tsx
-export default declareComponent(YourComponent, {
-  name: 'Your Component',
-  description: 'A component with a slot',
-  group: 'Content',
-  props: {
-    children: props.Slot({
-      name: 'Content',
-      tooltip: 'Add your content here. You can add Collection Lists, images, text, or other elements.'
-    }),
-    // Other props...
-  },
-});
+children: props.Slot({
+  name: "Content",
+  tooltip: "Add Collection Lists, images, or other elements here"
+})
 ```
 
-### Accessing Slot Content in React
+**Use for:**
+- Collection List integration
+- Custom content areas
+- Dynamic content injection
+- Child components
 
-In your React component, accept the `children` prop and render it:
+**In your component:**
 
 ```tsx
-interface YourComponentProps {
-  children?: any;
-  // Other props...
+interface MyComponentProps {
+  children?: any;  // ReactNode
 }
 
-const YourComponent = ({ children }: YourComponentProps) => {
+const MyComponent = ({ children }: MyComponentProps) => {
   return (
-    <div className="your-component">
-      {/* Your component content */}
-      <div className="slot-content">
-        {children}
-      </div>
+    <div>
+      {children}
     </div>
   );
 };
 ```
 
-### Extracting Data from Collection Lists in Slots
+**See:** [Using Slots and Collection Lists](#using-slots-and-collection-lists)
 
-When users place a Collection List inside your slot, you often want to extract specific data (like image URLs) from it. This requires querying the DOM after it renders.
+---
 
-#### Important: Shadow DOM Considerations
+### Boolean Props (Workaround)
 
-Webflow uses Shadow DOM for code components, which means you need special techniques to access slotted content:
+**Problem:** No native `props.Boolean()` exists.
 
-1. **Regular DOM query won't work** - `querySelector` from your ref won't see slotted content
-2. **You need to find the slot element** - Query for `<slot>` and use `assignedElements()`
-3. **Timing matters** - Content may not be available immediately; use delays and listeners
-
-#### Complete Example: Extracting Images from a Collection List
-
-Here's a complete working example of a component that extracts images from a Collection List:
+**Solution:** Use `props.Text()` with "0"/"1":
 
 ```tsx
-// ImageGrid.tsx
-import React, { useEffect, useRef, useState } from 'react';
-import './ImageGrid.css';
+// In .webflow.tsx
+isActive: props.Text({
+  name: "Is Active",
+  defaultValue: "0",  // "0" = false, "1" = true
+  tooltip: "Set to 1 to enable"
+})
 
-interface ImageGridProps {
-  children?: any;
-  columns?: number;
+// In .tsx
+interface MyComponentProps {
+  isActive?: boolean | string;  // Accept both
 }
 
-const ImageGrid = ({ children, columns = 3 }: ImageGridProps) => {
-  const slotRef = useRef(null);
+const MyComponent = ({ isActive = false }: MyComponentProps) => {
+  const parsed = typeof isActive === 'string'
+    ? isActive === '1'
+    : isActive;
+
+  if (parsed) {
+    // Enabled
+  }
+};
+```
+
+---
+
+### Array Props (Workaround)
+
+**Problem:** No native `props.Array()` exists.
+
+**Solution:** Use `props.Text()` with comma-separated values:
+
+```tsx
+// In .webflow.tsx
+colors: props.Text({
+  name: "Colors",
+  defaultValue: "#ff0000,#00ff00,#0000ff",
+  tooltip: "Comma-separated hex colors"
+})
+
+// In .tsx
+interface MyComponentProps {
+  colors?: string | string[];  // Accept both
+}
+
+const MyComponent = ({ colors }: MyComponentProps) => {
+  const parsedColors = typeof colors === 'string'
+    ? colors.split(',').map(c => c.trim()).filter(Boolean)
+    : colors;
+
+  parsedColors?.forEach(color => {
+    // Use each color
+  });
+};
+```
+
+---
+
+## Using Slots and Collection Lists
+
+Slots enable users to place Webflow Collection Lists and other content inside your components. This section covers the complete pattern for extracting and using slotted content.
+
+### Basic Slot Setup
+
+```tsx
+// YourComponent.webflow.tsx
+export default declareComponent(YourComponent, {
+  name: 'Your Component',
+  props: {
+    children: props.Slot({
+      name: 'Content',
+      tooltip: 'Add Collection List or other elements here'
+    })
+  }
+});
+
+// YourComponent.tsx
+interface YourComponentProps {
+  children?: any;
+}
+
+const YourComponent = ({ children }: YourComponentProps) => {
+  return (
+    <div>
+      {children}  {/* Renders slotted content as-is */}
+    </div>
+  );
+};
+```
+
+---
+
+### Extracting Collection List Data
+
+When you need to extract specific data (images, text, etc.) from a Collection List:
+
+#### Complete Working Pattern
+
+```tsx
+import React, { useEffect, useRef, useState } from 'react';
+
+interface MyComponentProps {
+  children?: any;
+}
+
+const MyComponent = ({ children }: MyComponentProps) => {
+  const slotRef = useRef<HTMLDivElement>(null);
   const [extractedImages, setExtractedImages] = useState<string[]>([]);
 
-  // Extract images from slot (Collection List)
   useEffect(() => {
     const extractImages = () => {
-      if (!slotRef.current) {
-        console.log('[ImageGrid] slotRef.current is null');
-        return;
-      }
+      if (!slotRef.current) return;
 
-      console.log('[ImageGrid] Attempting to extract images...');
-      
-      // Try multiple approaches to find the slot
+      // Strategy 1: Find slot element
       let slotElement = slotRef.current.querySelector('slot');
-      
-      // If not found, try finding from shadow root
+
+      // Strategy 2: Try shadow root
       if (!slotElement && slotRef.current.getRootNode) {
         const root: any = slotRef.current.getRootNode();
         if (root && root.host) {
-          console.log('[ImageGrid] Found shadow root');
-          slotElement = root.querySelector('slot[name="children"]') || root.querySelector('slot');
+          slotElement = root.querySelector('slot[name="children"]') ||
+                       root.querySelector('slot');
         }
       }
-      
+
       if (slotElement) {
-        console.log('[ImageGrid] Found slot element');
-        // Shadow DOM: get assigned elements from the slot
-        const assignedElements = (slotElement as any).assignedElements?.({ flatten: true }) || [];
-        console.log('[ImageGrid] Assigned elements:', assignedElements.length);
+        // Strategy 3: Get assigned elements
+        const assignedElements = (slotElement as any).assignedElements?.({
+          flatten: true
+        }) || [];
+
         const imgElements: HTMLImageElement[] = [];
-        
-        // Search for images in assigned elements
+
+        // Strategy 4: Extract images
         assignedElements.forEach((element: any) => {
           if (element.tagName === 'IMG') {
             imgElements.push(element as HTMLImageElement);
           } else {
-            // Search for images within the element (Collection List items)
             const imgs: NodeListOf<HTMLImageElement> = element.querySelectorAll('img');
             Array.from(imgs).forEach(img => imgElements.push(img));
           }
         });
-        
-        console.log('[ImageGrid] Found images:', imgElements.length);
-        const imageUrls = imgElements.map(img => img.src).filter(src => src);
+
+        const imageUrls = imgElements
+          .map(img => img.src)
+          .filter(src => src);
+
         if (imageUrls.length > 0) {
-          console.log('[ImageGrid] Setting images:', imageUrls);
           setExtractedImages(imageUrls);
         }
       } else {
-        console.log('[ImageGrid] No slot found, trying regular DOM');
-        // Fallback: Regular DOM query
+        // Strategy 5: Fallback to regular DOM
         const imgElements = slotRef.current.querySelectorAll('img');
-        console.log('[ImageGrid] Regular DOM images:', imgElements.length);
-        const imageUrls = Array.from(imgElements).map((img: any) => img.src).filter((src: string) => src);
+        const imageUrls = Array.from(imgElements)
+          .map((img: any) => img.src)
+          .filter((src: string) => src);
+
         if (imageUrls.length > 0) {
           setExtractedImages(imageUrls);
         }
@@ -439,285 +1464,714 @@ const ImageGrid = ({ children, columns = 3 }: ImageGridProps) => {
 
     // Try immediately
     extractImages();
-    
-    // Try after delays to ensure DOM is ready
-    const timeoutId1 = setTimeout(extractImages, 100);
-    const timeoutId2 = setTimeout(extractImages, 300);
-    const timeoutId3 = setTimeout(extractImages, 1000);
-    
-    // Also listen for slot changes
+
+    // Try with delays
+    const timeout1 = setTimeout(extractImages, 100);
+    const timeout2 = setTimeout(extractImages, 300);
+    const timeout3 = setTimeout(extractImages, 1000);
+
+    // Listen for changes
     if (slotRef.current) {
       const slotElement = slotRef.current.querySelector('slot');
       if (slotElement) {
-        const handleSlotChange = () => {
-          console.log('[ImageGrid] Slot changed');
-          extractImages();
-        };
+        const handleSlotChange = () => extractImages();
         (slotElement as any).addEventListener?.('slotchange', handleSlotChange);
-        
+
         return () => {
-          clearTimeout(timeoutId1);
-          clearTimeout(timeoutId2);
-          clearTimeout(timeoutId3);
+          clearTimeout(timeout1);
+          clearTimeout(timeout2);
+          clearTimeout(timeout3);
           (slotElement as any).removeEventListener?.('slotchange', handleSlotChange);
         };
       }
     }
-    
+
     return () => {
-      clearTimeout(timeoutId1);
-      clearTimeout(timeoutId2);
-      clearTimeout(timeoutId3);
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+      clearTimeout(timeout3);
     };
   }, [children]);
 
   return (
-    <div className="image-grid">
-      {/* Hidden slot for Collection List */}
+    <div>
+      {/* Hidden slot container */}
       <div ref={slotRef} style={{ display: 'none' }}>
         {children}
       </div>
 
-      {/* Render extracted images in a grid */}
-      <div 
-        className="grid-container"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${columns}, 1fr)`,
-          gap: '1rem'
-        }}
-      >
+      {/* Render extracted content in custom layout */}
+      <div className="custom-layout">
         {extractedImages.map((src, index) => (
-          <div key={index} className="grid-item">
-            <img src={src} alt={`Grid item ${index + 1}`} />
-          </div>
+          <img key={index} src={src} alt={`Image ${index + 1}`} />
         ))}
       </div>
     </div>
   );
 };
-
-export default ImageGrid;
 ```
 
+---
+
+### How Users Use This in Webflow
+
+1. Drag your component onto canvas
+2. Inside the slot area, add a **Collection List** component
+3. Connect Collection List to a CMS collection
+4. Inside Collection List Item, add an **Image** element
+5. Bind Image to collection's image field
+6. Component automatically extracts all images
+
+Your component receives the images and can display them in any custom layout!
+
+---
+
+### Extracting Other Data Types
+
+#### Text Content
+
 ```tsx
-// ImageGrid.webflow.tsx
-import ImageGrid from './ImageGrid';
+const textElements = element.querySelectorAll('[data-text-field]');
+const textContent = Array.from(textElements).map(el => el.textContent).filter(Boolean);
+```
+
+#### Attributes
+
+```tsx
+const items = assignedElements.map(element => ({
+  question: element.querySelector('[data-faq-question]')?.textContent || '',
+  answer: element.querySelector('[data-faq-answer]')?.textContent || ''
+}));
+```
+
+#### Mixed Content
+
+```tsx
+assignedElements.forEach((element: any) => {
+  const data = {
+    image: element.querySelector('img')?.src,
+    title: element.querySelector('h3')?.textContent,
+    description: element.querySelector('p')?.textContent,
+    link: element.querySelector('a')?.href
+  };
+  extractedData.push(data);
+});
+```
+
+---
+
+## Advanced Patterns
+
+### Performance Optimization
+
+#### Throttling Mouse Events
+
+```tsx
+const throttle = (func: (...args: any[]) => void, limit: number) => {
+  let lastCall = 0;
+  return function (this: any, ...args: any[]) {
+    const now = performance.now();
+    if (now - lastCall >= limit) {
+      lastCall = now;
+      func.apply(this, args);
+    }
+  };
+};
+
+useEffect(() => {
+  const handleMouseMove = (e: MouseEvent) => {
+    // Expensive operation
+  };
+
+  const throttledMove = throttle(handleMouseMove, 16); // ~60fps
+  window.addEventListener('mousemove', throttledMove);
+
+  return () => {
+    window.removeEventListener('mousemove', throttledMove);
+  };
+}, []);
+```
+
+**Real Example:** [DotGrid.tsx:10-19](src/components/DotGrid.tsx#L10-L19)
+
+---
+
+#### ResizeObserver for Container Sizing
+
+```tsx
+useEffect(() => {
+  const container = containerRef.current;
+  if (!container) return;
+
+  const handleResize = () => {
+    const { width, height } = container.getBoundingClientRect();
+    // Update component dimensions
+  };
+
+  let resizeObserver: ResizeObserver | null = null;
+
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(container);
+  } else {
+    // Fallback for older browsers
+    window.addEventListener('resize', handleResize);
+  }
+
+  // Initial size
+  handleResize();
+
+  return () => {
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    } else {
+      window.removeEventListener('resize', handleResize);
+    }
+  };
+}, []);
+```
+
+**Real Example:** [Particles.tsx:147-164](src/components/Particles.tsx#L147-L164)
+
+---
+
+### Animation Cleanup
+
+Always clean up animations, timers, and event listeners:
+
+```tsx
+useEffect(() => {
+  let animationFrameId: number;
+
+  const animate = () => {
+    // Animation logic
+    animationFrameId = requestAnimationFrame(animate);
+  };
+
+  animationFrameId = requestAnimationFrame(animate);
+
+  return () => {
+    cancelAnimationFrame(animationFrameId);
+  };
+}, []);
+```
+
+**Real Example:** [Particles.tsx:237-284](src/components/Particles.tsx#L237-L284)
+
+---
+
+### GSAP Lag Smoothing
+
+When using GSAP in Webflow:
+
+```tsx
+import { gsap } from 'gsap';
+
+useEffect(() => {
+  // Disable lag smoothing to prevent jerky animations
+  gsap.ticker.lagSmoothing(0);
+
+  // Your GSAP animations...
+}, []);
+```
+
+**Real Example:** [GridMotion.tsx:147](src/components/GridMotion.tsx#L147)
+
+---
+
+## Real-World Examples
+
+### Example 1: FAQ Component (CSS Variables Approach)
+
+Complete production component using CSS variables for all styling:
+
+**Component Implementation:**
+
+```tsx
+// FAQ.tsx
+import React, { useState } from 'react';
+import './FAQ.css';
+
+interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+interface FAQProps {
+  type?: 'single' | 'multiple';
+  animationDuration?: number;
+  children?: any;
+}
+
+const FAQ = ({
+  type = 'single',
+  animationDuration = 0.3,
+  children
+}: FAQProps) => {
+  const [items, setItems] = useState<FAQItem[]>([]);
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+
+  // Extract FAQ items from Collection List (see Issue 3)
+  // ... extraction logic ...
+
+  const toggleItem = (itemId: string) => {
+    if (type === 'single') {
+      setOpenItems(openItems.has(itemId) ? new Set() : new Set([itemId]));
+    } else {
+      const newOpenItems = new Set(openItems);
+      if (newOpenItems.has(itemId)) {
+        newOpenItems.delete(itemId);
+      } else {
+        newOpenItems.add(itemId);
+      }
+      setOpenItems(newOpenItems);
+    }
+  };
+
+  return (
+    <div className="faq">
+      <div ref={slotRef} style={{ display: 'none' }}>
+        {children}
+      </div>
+
+      {items.map((item) => (
+        <div
+          key={item.id}
+          className={`faq__item ${openItems.has(item.id) ? 'faq__item--open' : ''}`}
+        >
+          <button
+            className="faq__trigger"
+            onClick={() => toggleItem(item.id)}
+            aria-expanded={openItems.has(item.id)}
+          >
+            <span className="faq__question">{item.question}</span>
+            <span className="faq__icon">▼</span>
+          </button>
+
+          <div
+            className="faq__content"
+            style={{
+              transitionDuration: `${animationDuration}s`
+            }}
+          >
+            <div className="faq__answer">
+              {item.answer}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default FAQ;
+```
+
+**Styles (CSS Variables):**
+
+```css
+/* FAQ.css */
+
+/* NOTE: Do NOT define :host variables - they override Webflow's :root values */
+
+.faq__item {
+  border: 1px solid var(--faq-toggle-border-color, #e5e5e5);
+  border-radius: var(--faq-border-radius, 0px);
+}
+
+.faq__trigger {
+  background: none;
+  cursor: pointer;
+  padding: var(--faq-question-padding, 16px);
+}
+
+.faq__trigger:hover {
+  background-color: var(--faq-toggle-hover-color, #f9f9f9);
+}
+
+.faq__question {
+  font-family: var(--faq-question-font-family, inherit);
+  font-size: var(--faq-question-font-size, inherit);
+  font-weight: var(--faq-question-font-weight, inherit);
+  color: var(--faq-question-color, #000000);
+}
+
+.faq__answer {
+  font-family: var(--faq-answer-font-family, inherit);
+  color: var(--faq-answer-color, #000000);
+  font-size: var(--faq-answer-font-size, 16px);
+  padding: var(--faq-answer-padding, 0 16px 16px 16px);
+}
+```
+
+**Webflow Declaration:**
+
+```tsx
+// FAQ.webflow.tsx
+import FAQ from './FAQ';
 import { props } from '@webflow/data-types';
 import { declareComponent } from '@webflow/react';
 
-export default declareComponent(ImageGrid, {
-  name: 'Image Grid',
-  description: 'A grid that extracts images from a Collection List and displays them.',
-  group: 'Gallery',
+export default declareComponent(FAQ, {
+  name: 'FAQ Accordion',
+  description: 'Accessible accordion component. Style with CSS variables in Webflow Variables panel.',
+  group: 'Interactive',
   props: {
     children: props.Slot({
-      name: 'Images',
-      tooltip: 'Add a Collection List here with images. The component will automatically extract and display all images in a grid.'
+      name: 'FAQ Items',
+      tooltip: 'Add Collection List with data-faq-question and data-faq-answer attributes'
     }),
-    columns: props.Number({
-      name: 'Columns',
-      defaultValue: 3,
+    type: props.Text({
+      name: 'Accordion Type',
+      defaultValue: 'single',
+      group: 'Behavior'
+    }),
+    animationDuration: props.Number({
+      name: 'Animation Speed',
+      defaultValue: 0.3,
+      min: 0.1,
+      max: 2,
+      group: 'Animation'
+    })
+  },
+  options: {
+    applyTagSelectors: false,
+    ssr: false
+  }
+});
+```
+
+**How Users Style It in Webflow:**
+
+1. Go to **Variables** panel
+2. Create variables:
+   - `--faq-question-color` → `#1a1a1a`
+   - `--faq-question-font-size` → `18px`
+   - `--faq-answer-color` → `#666666`
+   - `--faq-border-radius` → `8px`
+3. Component automatically uses these values
+4. Update variables to restyle all FAQs globally
+
+---
+
+### Example 2: Particles Component (Props Approach)
+
+WebGL component with full prop configuration:
+
+```tsx
+// Particles.tsx
+import React, { useEffect, useRef } from 'react';
+import { Renderer, Camera, Geometry, Program, Mesh } from 'ogl';
+import './Particles.css';
+
+interface ParticlesProps {
+  particleCount?: number;
+  particleSpread?: number;
+  speed?: number;
+  particleColors?: string | string[];
+  moveParticlesOnHover?: boolean | string;
+  particleBaseSize?: number;
+  cameraDistance?: number;
+  disableRotation?: boolean | string;
+}
+
+const Particles: React.FC<ParticlesProps> = ({
+  particleCount = 200,
+  particleSpread = 10,
+  speed = 0.1,
+  particleColors,
+  moveParticlesOnHover = false,
+  particleBaseSize = 100,
+  cameraDistance = 20,
+  disableRotation = false,
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const isMouseInsideRef = useRef(false);
+
+  // Parse string props from Webflow
+  const parsedMoveOnHover = typeof moveParticlesOnHover === 'string'
+    ? moveParticlesOnHover === '1'
+    : moveParticlesOnHover;
+
+  const parsedDisableRotation = typeof disableRotation === 'string'
+    ? disableRotation === '1'
+    : disableRotation;
+
+  const parsedColors = typeof particleColors === 'string'
+    ? particleColors.split(',').map(c => c.trim()).filter(Boolean)
+    : particleColors;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Setup WebGL renderer
+    const renderer = new Renderer({
+      depth: false,
+      alpha: true,
+      dpr: window.devicePixelRatio || 1
+    });
+    const gl = renderer.gl;
+    container.appendChild(gl.canvas);
+
+    // Setup camera
+    const camera = new Camera(gl, { fov: 15 });
+    camera.position.set(0, 0, cameraDistance);
+
+    // Handle resize
+    const resize = () => {
+      const width = Math.max(container.clientWidth, window.innerWidth);
+      const height = Math.max(container.clientHeight, window.innerHeight);
+      renderer.setSize(width, height);
+      camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
+    };
+
+    // Use ResizeObserver for better performance
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(container);
+    } else {
+      window.addEventListener('resize', resize, false);
+    }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resize);
+    });
+
+    // Mouse tracking (window-level for Webflow compatibility)
+    const handleMouseMove = (e: PointerEvent) => {
+      if (!isMouseInsideRef.current) return;
+
+      const rect = container.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+
+      mouseRef.current = {
+        x: Math.max(-1, Math.min(1, x)),
+        y: Math.max(-1, Math.min(1, y))
+      };
+    };
+
+    const handleMouseEnter = () => {
+      isMouseInsideRef.current = true;
+    };
+
+    const handleMouseLeave = () => {
+      isMouseInsideRef.current = false;
+      mouseRef.current = { x: 0, y: 0 };
+    };
+
+    if (parsedMoveOnHover) {
+      window.addEventListener('pointermove', handleMouseMove);
+      container.addEventListener('mouseenter', handleMouseEnter);
+      container.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    // Create particles geometry and program
+    // ... WebGL setup code ...
+
+    // Animation loop
+    let animationFrameId: number;
+    let lastTime = performance.now();
+    let elapsed = 0;
+
+    const update = (t: number) => {
+      animationFrameId = requestAnimationFrame(update);
+      const delta = t - lastTime;
+      lastTime = t;
+      elapsed += delta * speed;
+
+      if (parsedMoveOnHover) {
+        particles.position.x = -mouseRef.current.x;
+        particles.position.y = -mouseRef.current.y;
+      }
+
+      if (!parsedDisableRotation) {
+        particles.rotation.z += 0.01 * speed;
+      }
+
+      renderer.render({ scene: particles, camera });
+    };
+
+    animationFrameId = requestAnimationFrame(update);
+
+    // Cleanup
+    return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      } else {
+        window.removeEventListener('resize', resize);
+      }
+      if (parsedMoveOnHover) {
+        window.removeEventListener('pointermove', handleMouseMove);
+        container.removeEventListener('mouseenter', handleMouseEnter);
+        container.removeEventListener('mouseleave', handleMouseLeave);
+      }
+      cancelAnimationFrame(animationFrameId);
+      if (container.contains(gl.canvas)) {
+        container.removeChild(gl.canvas);
+      }
+    };
+  }, [
+    particleCount,
+    particleSpread,
+    speed,
+    particleColors,
+    moveParticlesOnHover,
+    particleBaseSize,
+    cameraDistance,
+    disableRotation
+  ]);
+
+  return <div ref={containerRef} className="particles-container" />;
+};
+
+export default Particles;
+```
+
+**Webflow Declaration:**
+
+```tsx
+// Particles.webflow.tsx
+import Particles from './Particles';
+import { props } from '@webflow/data-types';
+import { declareComponent } from '@webflow/react';
+
+export default declareComponent(Particles, {
+  name: 'Particles Background',
+  description: 'A WebGL particle system with customizable colors and animations',
+  group: 'Interactive',
+  props: {
+    particleCount: props.Number({
+      name: 'Particle Count',
+      defaultValue: 200,
+      min: 10,
+      max: 1000,
+      group: 'Content'
+    }),
+    particleSpread: props.Number({
+      name: 'Particle Spread',
+      defaultValue: 10,
       min: 1,
-      max: 6,
+      max: 50,
+      group: 'Content'
     }),
+    speed: props.Number({
+      name: 'Speed',
+      defaultValue: 0.1,
+      min: 0,
+      max: 2,
+      group: 'Animation'
+    }),
+    particleColors: props.Text({
+      name: 'Particle Colors',
+      defaultValue: '#ffffff,#ffffff,#ffffff',
+      group: 'Style',
+      tooltip: 'Comma-separated hex colors'
+    }),
+    moveParticlesOnHover: props.Text({
+      name: 'Move On Hover',
+      defaultValue: '0',
+      group: 'Behavior',
+      tooltip: 'Set to 1 to enable'
+    }),
+    particleBaseSize: props.Number({
+      name: 'Base Size',
+      defaultValue: 100,
+      min: 10,
+      max: 300,
+      group: 'Style'
+    }),
+    cameraDistance: props.Number({
+      name: 'Camera Distance',
+      defaultValue: 20,
+      min: 5,
+      max: 50,
+      group: 'Advanced'
+    }),
+    disableRotation: props.Text({
+      name: 'Disable Rotation',
+      defaultValue: '0',
+      group: 'Behavior',
+      tooltip: 'Set to 1 to disable'
+    }),
+  },
+  options: {
+    applyTagSelectors: false,
+    ssr: false,  // WebGL requires browser
   },
 });
 ```
 
-### How Users Will Use This in Webflow
-
-1. **Drag the component** onto the canvas
-2. **Inside the slot**, add a Collection List element
-3. **Bind the Collection List** to a CMS collection (e.g., "Gallery", "Portfolio")
-4. **Inside the Collection List Item**, add an Image element
-5. **Bind the Image** to the collection's image field
-6. **The component automatically** extracts all images and displays them in the custom grid
-
-### Key Techniques for Slot Content Extraction
-
-#### 1. Reference the slot container
-
-```tsx
-const slotRef = useRef(null);
-
-// In render:
-<div ref={slotRef} style={{ display: 'none' }}>
-  {children}
-</div>
-```
-
-**Note**: The slot is hidden because you'll render the extracted content separately in your custom layout.
-
-#### 2. Find the slot element
-
-```tsx
-// Try direct query
-let slotElement = slotRef.current.querySelector('slot');
-
-// If not found, try shadow root
-if (!slotElement && slotRef.current.getRootNode) {
-  const root: any = slotRef.current.getRootNode();
-  if (root && root.host) {
-    slotElement = root.querySelector('slot[name="children"]') || root.querySelector('slot');
-  }
-}
-```
-
-#### 3. Get assigned elements
-
-```tsx
-if (slotElement) {
-  const assignedElements = (slotElement as any).assignedElements?.({ flatten: true }) || [];
-  
-  // Process each assigned element
-  assignedElements.forEach((element: any) => {
-    // Extract data you need
-  });
-}
-```
-
-#### 4. Extract specific elements (like images)
-
-```tsx
-const imgElements: HTMLImageElement[] = [];
-
-assignedElements.forEach((element: any) => {
-  if (element.tagName === 'IMG') {
-    // Direct image element
-    imgElements.push(element as HTMLImageElement);
-  } else {
-    // Search within Collection List items
-    const imgs: NodeListOf<HTMLImageElement> = element.querySelectorAll('img');
-    Array.from(imgs).forEach(img => imgElements.push(img));
-  }
-});
-
-// Extract URLs
-const imageUrls = imgElements.map(img => img.src).filter(src => src);
-```
-
-#### 5. Handle timing with delays and listeners
-
-```tsx
-useEffect(() => {
-  const extractData = () => {
-    // Extraction logic here
-  };
-
-  // Try multiple times with increasing delays
-  extractData();
-  const timeout1 = setTimeout(extractData, 100);
-  const timeout2 = setTimeout(extractData, 300);
-  const timeout3 = setTimeout(extractData, 1000);
-
-  // Listen for slot changes
-  const slotElement = slotRef.current?.querySelector('slot');
-  if (slotElement) {
-    const handleSlotChange = () => extractData();
-    (slotElement as any).addEventListener?.('slotchange', handleSlotChange);
-    
-    return () => {
-      clearTimeout(timeout1);
-      clearTimeout(timeout2);
-      clearTimeout(timeout3);
-      (slotElement as any).removeEventListener?.('slotchange', handleSlotChange);
-    };
-  }
-
-  return () => {
-    clearTimeout(timeout1);
-    clearTimeout(timeout2);
-    clearTimeout(timeout3);
-  };
-}, [children]);
-```
-
-### Best Practices for Slots
-
-1. **Always provide fallback content**: Show something useful when the slot is empty
-2. **Use hidden containers**: Hide the slot container and render extracted content in your custom layout
-3. **Add console logging**: During development, log what you're finding to debug Shadow DOM issues
-4. **Try multiple times**: Content may not be ready immediately; use delays
-5. **Listen for changes**: Use `slotchange` event to detect when content is added dynamically
-6. **Check both Shadow and Light DOM**: Try both approaches to find the slot element
-7. **Filter empty values**: Always filter out undefined/null values from extracted data
-
-### Debugging Slot Content
-
-Add console logs to understand what's happening:
-
-```tsx
-console.log('[Component] slotRef:', slotRef.current);
-console.log('[Component] Found slot element:', !!slotElement);
-console.log('[Component] Assigned elements:', assignedElements.length);
-console.log('[Component] Found images:', imageUrls);
-```
-
-Open the browser console when testing in Webflow to see these logs and debug extraction issues.
-
-### Alternative: Using Props Instead of Slots
-
-If you want users to configure content via props instead of slots, you can combine both approaches:
-
-```tsx
-interface ComponentProps {
-  children?: any;  // Slot for Collection List
-  imageUrls?: string;  // JSON fallback: '["url1", "url2"]'
-}
-
-// Priority: slot images > prop images > default
-const finalImages = extractedImages.length > 0 
-  ? extractedImages 
-  : (imageUrls ? JSON.parse(imageUrls) : defaultImages);
-```
-
-This gives users flexibility to either:
-- Use the visual Collection List slot (easier for designers)
-- Paste a JSON array of URLs (for quick testing)
+**Key Features:**
+- Boolean parsing (`moveParticlesOnHover`)
+- Array parsing (`particleColors`)
+- Window-level mouse events
+- Mouse enter/leave tracking
+- Proper cleanup
+- ResizeObserver
+- WebGL with `ssr: false`
 
 ---
 
 ## Testing Your Components
 
-### Create a Local Showcase
+### Local Development
 
-Create an `App.js` file to test your components locally before publishing:
+Create an `App.tsx` to test components:
 
-```jsx
+```tsx
 import React, { useState } from 'react';
-import { Badge } from './components/Badge';
+import { Particles } from './components/Particles';
+import { FAQ } from './components/FAQ';
 
 function App() {
-  const [text, setText] = useState('Hello World');
-  const [variant, setVariant] = useState('Light');
+  const [particleCount, setParticleCount] = useState(200);
+  const [speed, setSpeed] = useState(0.1);
 
   return (
     <div style={{ padding: '20px' }}>
       <h1>Component Showcase</h1>
-      
-      <div style={{ marginBottom: '20px' }}>
+
+      <section>
+        <h2>Particles</h2>
         <label>
-          Text:
-          <input 
-            value={text} 
-            onChange={(e) => setText(e.target.value)} 
+          Count: <input
+            type="number"
+            value={particleCount}
+            onChange={(e) => setParticleCount(Number(e.target.value))}
           />
         </label>
-        
         <label>
-          Variant:
-          <select 
-            value={variant} 
-            onChange={(e) => setVariant(e.target.value)}
-          >
-            <option>Light</option>
-            <option>Dark</option>
-          </select>
+          Speed: <input
+            type="number"
+            step="0.1"
+            value={speed}
+            onChange={(e) => setSpeed(Number(e.target.value))}
+          />
         </label>
-      </div>
 
-      <Badge text={text} variant={variant} />
+        <div style={{ height: '400px', background: '#000' }}>
+          <Particles
+            particleCount={particleCount}
+            speed={speed}
+            particleColors="#ffffff,#ff0000,#00ff00"
+            moveParticlesOnHover={true}
+          />
+        </div>
+      </section>
+
+      <section>
+        <h2>FAQ</h2>
+        <FAQ type="single" animationDuration={0.3}>
+          {/* Test with static content */}
+          <div data-faq-question>What is this?</div>
+          <div data-faq-answer>This is a test answer.</div>
+        </FAQ>
+      </section>
     </div>
   );
 }
@@ -725,7 +2179,7 @@ function App() {
 export default App;
 ```
 
-Run your development server:
+Run:
 
 ```bash
 npm start
@@ -741,367 +2195,267 @@ npm start
 npm install -g @webflow/cli
 ```
 
-### 2. Authenticate with Webflow
+### 2. Authenticate
 
 ```bash
 npx wf auth
 ```
 
-This will open your browser to authenticate with your Webflow account.
+Opens browser to authenticate with Webflow account.
 
-### 3. Build and Publish Your Components
+### 3. Publish Components
 
 ```bash
 npx wf publish
 ```
 
-This command will:
-- Bundle your components
-- Upload them to Webflow
-- Make them available as a shared library in your workspace
+This command:
+- Bundles your components
+- Uploads to Webflow
+- Makes them available in your workspace
 
-### 4. Install Components in Webflow
+### 4. Install in Webflow Site
 
-1. Open your Webflow project
-2. Navigate to the **Assets** panel
+1. Open Webflow project
+2. Go to **Assets** panel
 3. Click **Libraries** (book icon)
 4. Find your published library
-5. Click **Install** to add it to your site
-6. Drag components from the **Add** panel onto your canvas
-
----
-
-## Best Practices
-
-### 1. Component Design
-
-- **Keep components focused**: Each component should do one thing well
-- **Make components reusable**: Use props to make components flexible
-- **Include sensible defaults**: Ensure components work out-of-the-box
-- **Handle edge cases**: Validate props and handle missing data gracefully
-
-### 2. Props Configuration
-
-- **Use clear naming**: Prop names should be descriptive and self-explanatory
-- **Provide defaults**: Always set reasonable default values
-- **Group related props**: Use consistent naming patterns for related properties
-- **Document behavior**: Use the component description to explain functionality
-
-### 3. Styling
-
-- **Use CSS files**: Keep styles in separate CSS files for maintainability
-- **Avoid inline styles**: Use CSS classes for better performance
-- **Support customization**: Allow background colors, text colors, and other common styles to be configured
-- **Use CSS variables**: Consider using CSS variables for themeable properties
-
-### 4. Performance
-
-- **Optimize renders**: Use `useMemo` and `useCallback` for expensive computations
-- **Lazy load when possible**: Use React.lazy for code splitting
-- **Clean up effects**: Always clean up event listeners and timers in useEffect
-- **Minimize dependencies**: Keep dependency arrays small and specific
-
-### 5. Event Listeners and Mouse Interactions
-
-**Important**: For components that respond to mouse/pointer movement in Webflow:
-
-- ✅ **DO**: Use `window.addEventListener('pointermove', ...)` for reliable mouse tracking
-- ❌ **DON'T**: Use `container.addEventListener('mousemove', ...)` - may not work in Webflow
-
-**Why?** Container-level mouse events may not fire reliably in Webflow's environment due to DOM structure, layering, and z-index issues.
-
-**Example:**
-
-```tsx
-useEffect(() => {
-  const handlePointerMove = (e: PointerEvent) => {
-    // Calculate relative position if needed
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (rect) {
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      // Use x, y for your logic
-    }
-  };
-
-  // Use window-level listener
-  window.addEventListener('pointermove', handlePointerMove);
-
-  return () => {
-    window.removeEventListener('pointermove', handlePointerMove);
-  };
-}, [dependencies]);
-```
-
-This pattern ensures your interactive components work both in standalone React and within Webflow.
-
-### 6. Dependencies
-
-- **External libraries**: Can be used, but bundle size matters
-- **Common libraries**: GSAP, OGL, and similar are fine
-- **Keep bundle size small**: Users will download your components
-
----
-
-## Examples
-
-### Example 1: WebGL Particles with Boolean and Array Props
-
-A comprehensive example showing how to handle boolean props, array props, and mouse interactions:
-
-```tsx
-// Particles.tsx
-import React, { useEffect, useRef } from 'react';
-import './Particles.css';
-
-interface ParticlesProps {
-  particleCount?: number;
-  speed?: number;
-  particleColors?: string | string[];  // Accept both types
-  moveParticlesOnHover?: boolean | string;  // Accept both types
-  alphaParticles?: boolean | string;  // Accept both types
-  disableRotation?: boolean | string;  // Accept both types
-}
-
-const Particles: React.FC<ParticlesProps> = ({
-  particleCount = 200,
-  speed = 0.1,
-  particleColors,
-  moveParticlesOnHover = false,
-  alphaParticles = false,
-  disableRotation = false,
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Parse string-based props from Webflow
-  const parsedMoveOnHover = typeof moveParticlesOnHover === 'string' 
-    ? moveParticlesOnHover === '1' 
-    : moveParticlesOnHover;
-  
-  const parsedAlphaParticles = typeof alphaParticles === 'string' 
-    ? alphaParticles === '1' 
-    : alphaParticles;
-  
-  const parsedDisableRotation = typeof disableRotation === 'string' 
-    ? disableRotation === '1' 
-    : disableRotation;
-  
-  const parsedColors = typeof particleColors === 'string' 
-    ? particleColors.split(',').map(c => c.trim()).filter(Boolean)
-    : particleColors;
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // Use window-level pointer events for Webflow compatibility
-    const handlePointerMove = (e: PointerEvent) => {
-      const rect = container.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      // Use x, y for particle movement
-    };
-
-    if (parsedMoveOnHover) {
-      window.addEventListener('pointermove', handlePointerMove);
-    }
-
-    // Render logic using parsedColors, parsedAlphaParticles, etc.
-    
-    return () => {
-      if (parsedMoveOnHover) {
-        window.removeEventListener('pointermove', handlePointerMove);
-      }
-    };
-  }, [particleCount, speed, particleColors, moveParticlesOnHover, 
-      alphaParticles, disableRotation]);
-
-  return <div ref={containerRef} className="particles-container" />;
-};
-
-export default Particles;
-```
-
-```tsx
-// Particles.webflow.tsx
-import Particles from './Particles';
-import { props } from '@webflow/data-types';
-import { declareComponent } from '@webflow/react';
-
-export default declareComponent(Particles, {
-  name: 'Particles',
-  description: 'A WebGL particle system with customizable colors and animations',
-  group: 'Interactive',
-  props: {
-    particleCount: props.Number({
-      name: 'Particle Count',
-      defaultValue: 200,
-      min: 10,
-      max: 1000,
-    }),
-    speed: props.Number({
-      name: 'Speed',
-      defaultValue: 0.1,
-      min: 0,
-      max: 2,
-    }),
-    particleColors: props.Text({
-      name: 'Particle Colors',
-      defaultValue: '#ffffff,#ff0000,#00ff00',
-    }),
-    moveParticlesOnHover: props.Text({
-      name: 'Move On Hover',
-      defaultValue: '0',  // "0" = false, "1" = true
-    }),
-    alphaParticles: props.Text({
-      name: 'Alpha Particles',
-      defaultValue: '0',
-    }),
-    disableRotation: props.Text({
-      name: 'Disable Rotation',
-      defaultValue: '0',
-    }),
-  },
-});
-```
-
-**Key Features:**
-- Boolean props using Text with "0"/"1" values
-- Array prop using comma-separated colors
-- Dual type support in TypeScript interface
-- Window-level pointer events for Webflow compatibility
-- Parsing logic to convert strings to appropriate types
-
-### Example 2: Simple Card Component
-
-A straightforward component with basic props:
-
-```tsx
-// Card.tsx
-import React from 'react';
-import './Card.css';
-
-interface CardProps {
-  title: string;
-  description: string;
-  imageUrl?: string;
-  variant?: 'default' | 'featured';
-}
-
-export const Card: React.FC<CardProps> = ({
-  title,
-  description,
-  imageUrl,
-  variant = 'default'
-}) => (
-  <div className={`card card--${variant}`}>
-    {imageUrl && <img src={imageUrl} alt={title} />}
-    <h3>{title}</h3>
-    <p>{description}</p>
-  </div>
-);
-```
-
-```tsx
-// Card.webflow.tsx
-import { Card } from './Card';
-import { props } from '@webflow/data-types';
-import { declareComponent } from '@webflow/react';
-
-export default declareComponent(Card, {
-  name: 'Card',
-  description: 'A flexible card component',
-  group: 'Content',
-  props: {
-    title: props.Text({
-      name: "Title",
-      defaultValue: "Card Title",
-    }),
-    description: props.Text({
-      name: "Description",
-      defaultValue: "Card description goes here",
-    }),
-    imageUrl: props.Text({
-      name: "Image URL",
-      defaultValue: "",
-    }),
-    variant: props.Variant({
-      name: "Variant",
-      options: ["default", "featured"],
-      defaultValue: "default",
-    }),
-  },
-});
-```
+5. Click **Install**
+6. Drag components from **Add** panel
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
+### Component Not Appearing in Webflow
 
-1. **Component not appearing in Webflow**
-   - Check your `webflow.json` glob pattern
-   - Ensure the `.webflow.tsx` file is in the correct location
-   - Try running `npx wf publish` again
+**Check:**
+- [ ] `webflow.json` glob pattern includes `.webflow.tsx` files
+- [ ] File is in correct location matching glob
+- [ ] `npx wf publish` completed successfully
+- [ ] Library is installed in the site (Assets → Libraries)
+- [ ] No build errors in terminal
 
-2. **Props not working**
-   - Verify prop names match between React component and Webflow declaration
-   - Check that default values are provided
-   - Remove unsupported fields like `description` from prop definitions
+**Fix:**
+```bash
+# Republish
+npx wf publish
 
-3. **Boolean props not working**
-   - Don't use `props.Boolean()` - it doesn't exist
-   - Use `props.Text()` with "0" and "1" values
-   - Parse strings to booleans in your component: `value === '1'`
-   - Update TypeScript interface to accept `boolean | string`
-
-4. **Array props not working**
-   - Use `props.Text()` with comma-separated values
-   - Parse strings to arrays: `value.split(',').map(c => c.trim())`
-   - Update TypeScript interface to accept `string | string[]` or `string | number[]`
-
-5. **Mouse interactions not working in Webflow**
-   - Don't use `container.addEventListener('mousemove', ...)`
-   - Use `window.addEventListener('pointermove', ...)` instead
-   - This ensures events fire reliably in Webflow's environment
-   - Still calculate relative coordinates using `getBoundingClientRect()`
-
-6. **Styling issues**
-   - Ensure CSS files are imported in your component
-   - Check that styles don't conflict with Webflow's styles
-   - Use specific class names to avoid conflicts
-
-7. **Build errors**
-   - Check Node.js version (20+ required)
-   - Verify all dependencies are installed
-   - Look for TypeScript errors in your components
-
-8. **Slot content not extracting (Collection Lists)**
-   - Add console.log statements to debug what's being found
-   - Ensure you're querying for the `<slot>` element, not direct children
-   - Try both direct query and shadow root approaches
-   - Use `assignedElements({ flatten: true })` to get slotted content
-   - Add multiple timeouts (100ms, 300ms, 1000ms) to handle timing issues
-   - Listen for `slotchange` events to catch dynamically added content
-   - Verify the slot container has a ref attached
-   - Check browser console for your debug logs
-
-9. **Collection List images not appearing**
-   - Verify images are being extracted (check console logs)
-   - Ensure you're filtering out empty/undefined URLs: `.filter(src => src)`
-   - Check that state is being set correctly: `setExtractedImages(imageUrls)`
-   - Verify your component re-renders when state updates
-   - Make sure the Collection List is actually inside the slot in Webflow
-   - Test with a simple array first to ensure rendering works
+# Check webflow.json
+{
+  "library": {
+    "components": ["./src/**/*.webflow.@(js|jsx|ts|tsx)"]
+  }
+}
+```
 
 ---
 
-## Resources
+### Props Not Working
 
-- [Webflow DevLink Documentation](https://developers.webflow.com/code-components/introduction)
-- [React Documentation](https://react.dev/)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
+**Check:**
+- [ ] Prop names match between `.tsx` and `.webflow.tsx`
+- [ ] Default values are provided
+- [ ] No unsupported fields (like `description` in prop definitions)
+- [ ] TypeScript interface accepts both native type and string
+
+**Fix:**
+```tsx
+// ✅ Good
+interface Props {
+  isActive?: boolean | string;  // Accept both
+}
+
+// Parse in component
+const parsed = typeof isActive === 'string' ? isActive === '1' : isActive;
+```
+
+---
+
+### Boolean Props Not Working
+
+**Check:**
+- [ ] Using `props.Text()` not `props.Boolean()` (doesn't exist)
+- [ ] Default value is `"0"` or `"1"` (string)
+- [ ] Component parses string to boolean
+- [ ] Interface accepts `boolean | string`
+
+**Fix:**
+```tsx
+// In .webflow.tsx
+isEnabled: props.Text({
+  name: 'Is Enabled',
+  defaultValue: '0'  // String!
+})
+
+// In .tsx
+interface Props {
+  isEnabled?: boolean | string;
+}
+
+const Component = ({ isEnabled = false }: Props) => {
+  const parsed = typeof isEnabled === 'string' ? isEnabled === '1' : isEnabled;
+};
+```
+
+---
+
+### Mouse Events Not Working
+
+**Check:**
+- [ ] Using `window.addEventListener('pointermove')` not container-level
+- [ ] Calculating relative coordinates with `getBoundingClientRect()`
+- [ ] Clamping normalized values
+- [ ] Cleanup in useEffect return
+
+**Fix:**
+```tsx
+useEffect(() => {
+  const handleMove = (e: PointerEvent) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) {
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      // Use x...
+    }
+  };
+
+  window.addEventListener('pointermove', handleMove);  // Window!
+
+  return () => {
+    window.removeEventListener('pointermove', handleMove);
+  };
+}, []);
+```
+
+---
+
+### Slot Content Not Extracting
+
+**Check:**
+- [ ] Querying for `<slot>` element not direct children
+- [ ] Using `assignedElements({ flatten: true })`
+- [ ] Trying both shadow root and regular DOM
+- [ ] Multiple timeouts (100ms, 300ms, 1000ms)
+- [ ] Listening for `slotchange` events
+- [ ] Filtering empty values
+- [ ] Console logging to debug
+
+**Fix:**
+```tsx
+// Find slot
+let slotElement = slotRef.current.querySelector('slot');
+if (!slotElement && slotRef.current.getRootNode) {
+  const root = slotRef.current.getRootNode();
+  slotElement = root.querySelector('slot');
+}
+
+// Get assigned elements
+const assigned = slotElement.assignedElements?.({ flatten: true }) || [];
+
+// Try with delays
+extractData();
+setTimeout(extractData, 100);
+setTimeout(extractData, 300);
+setTimeout(extractData, 1000);
+```
+
+---
+
+### CSS Variables Not Working
+
+**Check:**
+- [ ] NOT defining `:host` variables in component CSS
+- [ ] Using `var(--variable-name, fallback)` syntax
+- [ ] Variables defined at `:root` in Webflow Variables panel
+- [ ] Using "Copy CSS" to get exact variable names
+
+**Fix:**
+```css
+/* ❌ DON'T: This overrides Webflow's values */
+:host {
+  --my-color: #000;
+}
+
+/* ✅ DO: This inherits from Webflow */
+.my-element {
+  color: var(--my-color, #000);  /* Fallback only */
+}
+```
+
+---
+
+### SSR Errors
+
+**Check:**
+- [ ] Component uses browser APIs (window, document, canvas)
+- [ ] `ssr: false` in component options
+- [ ] No direct window/document access at module level
+
+**Fix:**
+```tsx
+// In .webflow.tsx
+export default declareComponent(MyComponent, {
+  name: 'My Component',
+  options: {
+    ssr: false  // Disable for browser-only components
+  }
+});
+```
+
+---
+
+## Best Practices Checklist
+
+### Component Design
+- [ ] Component has single, clear purpose
+- [ ] Sensible defaults provided
+- [ ] Edge cases handled (null, undefined, empty)
+- [ ] Responsive to container size
+
+### Props
+- [ ] Clear, descriptive names
+- [ ] Organized into groups
+- [ ] Tooltips for complex options
+- [ ] Validation (min/max for numbers)
+- [ ] Boolean props use Text with "0"/"1"
+- [ ] Array props use comma-separated Text
+
+### Styling
+- [ ] Decided: CSS Variables vs Props vs Hybrid
+- [ ] NO `:host` variables in CSS (if using CSS Variables approach)
+- [ ] CSS variables have fallback values
+- [ ] Component works with both approaches
+- [ ] Documented which CSS variables are available
+
+### Events
+- [ ] Mouse events on `window`, not container
+- [ ] Mouse enter/leave tracking implemented
+- [ ] Relative coordinates calculated correctly
+- [ ] Values clamped to prevent extremes
+
+### Performance
+- [ ] Event listeners throttled if needed
+- [ ] ResizeObserver for container sizing
+- [ ] Animation frames cleaned up
+- [ ] Effect dependencies minimal and specific
+
+### Shadow DOM
+- [ ] Slot extraction uses `assignedElements()`
+- [ ] Multiple timing strategies (immediate + delays)
+- [ ] `slotchange` listener added
+- [ ] Both Shadow DOM and Light DOM approaches tried
+- [ ] Empty values filtered
+
+### SSR
+- [ ] `ssr: false` if using browser APIs
+- [ ] No window/document at module level
+- [ ] Graceful degradation if possible
+
+### Cleanup
+- [ ] All event listeners removed
+- [ ] All timeouts cleared
+- [ ] All animation frames cancelled
+- [ ] All observers disconnected
 
 ---
 
@@ -1109,95 +2463,93 @@ export default declareComponent(Card, {
 
 ### Prop Type Patterns
 
-| JavaScript Type | Webflow Prop Type | Example Default | Parsing in Component |
-|----------------|------------------|-----------------|---------------------|
-| `string` | `props.Text()` | `"Hello"` | Direct use |
-| `number` | `props.Number()` | `100` | Direct use |
-| `boolean` | `props.Text()` | `"0"` or `"1"` | `value === '1'` |
-| `string[]` | `props.Text()` | `"a,b,c"` | `value.split(',').map(c => c.trim())` |
-| Enum/Union | `props.Variant()` | `"option1"` | Direct use |
-| Content Area | `props.Slot()` | N/A | Extract via DOM query |
+| Type | Webflow Prop | Example Default | Parse in Component |
+|------|--------------|-----------------|-------------------|
+| string | `props.Text()` | `"Hello"` | Direct use |
+| number | `props.Number()` | `100` | Direct use |
+| boolean | `props.Text()` | `"0"` or `"1"` | `value === '1'` |
+| string[] | `props.Text()` | `"a,b,c"` | `value.split(',').map(c => c.trim())` |
+| enum | `props.Variant()` | `"option1"` | Direct use |
+| ReactNode | `props.Slot()` | N/A | Extract via DOM |
 
 ### TypeScript Interface Pattern
 
 ```tsx
 interface MyComponentProps {
-  // Native types work in React, strings work in Webflow
-  name?: string;                    // Text prop
-  count?: number;                   // Number prop
-  isActive?: boolean | string;      // Text prop with "0"/"1"
-  colors?: string | string[];       // Text prop with comma-separated values
-  size?: 'small' | 'medium';        // Variant prop
-  children?: any;                   // Slot prop for content area
+  name?: string;                      // Text
+  count?: number;                     // Number
+  isActive?: boolean | string;        // Text ("0"/"1")
+  colors?: string | string[];         // Text (comma-separated)
+  size?: 'small' | 'medium';          // Variant
+  children?: any;                     // Slot
 }
 ```
 
-### Event Listener Pattern for Webflow
+### Event Listener Pattern
 
 ```tsx
-// ❌ Don't: Container-level events
+// ❌ Don't
 container.addEventListener('mousemove', handler);
 
-// ✅ Do: Window-level events
+// ✅ Do
 window.addEventListener('pointermove', handler);
 ```
 
-### Slot Extraction Pattern for Collection Lists
+### Slot Extraction Pattern
 
 ```tsx
-// Step 1: Create ref and state
-const slotRef = useRef(null);
-const [extractedData, setExtractedData] = useState([]);
-
-// Step 2: Find slot element (try both approaches)
-let slotElement = slotRef.current.querySelector('slot');
-if (!slotElement && slotRef.current.getRootNode) {
-  const root = slotRef.current.getRootNode();
-  if (root && root.host) {
-    slotElement = root.querySelector('slot[name="children"]') || root.querySelector('slot');
-  }
+// Find slot
+let slot = ref.current.querySelector('slot');
+if (!slot) {
+  const root = ref.current.getRootNode();
+  slot = root.querySelector('slot');
 }
 
-// Step 3: Get assigned elements and extract data
-if (slotElement) {
-  const assignedElements = slotElement.assignedElements?.({ flatten: true }) || [];
-  assignedElements.forEach((element) => {
-    // Extract images, text, or other data from element
-    const imgs = element.querySelectorAll('img');
-    // Process extracted data...
-  });
-}
+// Get content
+const elements = slot.assignedElements?.({ flatten: true }) || [];
 
-// Step 4: Try with delays and listen for changes
-useEffect(() => {
-  extractData();
-  const t1 = setTimeout(extractData, 100);
-  const t2 = setTimeout(extractData, 300);
-  // Also add slotchange listener...
-  return () => { clearTimeout(t1); clearTimeout(t2); };
-}, [children]);
+// Extract data
+elements.forEach(el => {
+  // Process...
+});
+
+// Try with delays
+extract();
+setTimeout(extract, 100);
+setTimeout(extract, 300);
+```
+
+### CSS Variables Pattern
+
+```css
+/* Component CSS */
+.element {
+  /* Inherit from Webflow, fallback to default */
+  color: var(--my-color, #000000);
+
+  /* DO NOT use :host */
+}
 ```
 
 ---
 
 ## Summary
 
-Converting React components to Webflow components involves:
+Building Webflow components successfully requires understanding:
 
-1. ✅ Creating your React component with TypeScript interfaces
-2. ✅ Creating a `.webflow.tsx` declaration file
-3. ✅ Configuring props using Webflow's prop types (Text, Number, Variant, Slot)
-4. ✅ Adding parsing logic for boolean and array props
-5. ✅ Implementing slot extraction for Collection Lists (using Shadow DOM techniques)
-6. ✅ Using window-level event listeners for mouse interactions
-7. ✅ Testing locally with a showcase app
-8. ✅ Publishing to Webflow using the CLI
-9. ✅ Installing and using in Webflow projects
+1. ✅ **Two styling approaches**: CSS Variables (for design tokens) + Props (for behavior)
+2. ✅ **Window-level events**: Mouse tracking must use `window.addEventListener`
+3. ✅ **Mouse enter/leave**: Track when mouse is inside component
+4. ✅ **Shadow DOM extraction**: Multi-strategy approach for Collection Lists
+5. ✅ **Prop workarounds**: Text props for booleans and arrays
+6. ✅ **SSR configuration**: Disable for browser-only components
+7. ✅ **CSS variables**: Use fallbacks, not `:host` definitions
+8. ✅ **Component options**: `applyTagSelectors` and `ssr` flags
+9. ✅ **Cleanup patterns**: Always remove listeners and cancel animations
+10. ✅ **Performance**: Throttling, ResizeObserver, efficient updates
 
-With this workflow, you can build powerful, reusable components in React and make them available to designers in Webflow's visual editor - including components that work seamlessly with Webflow's CMS and Collection Lists!
+With these patterns, you can build powerful, reusable React components that work seamlessly in Webflow's visual editor!
 
 ---
 
-**Happy component building! 🎨**
-
-
+**Happy building! 🎨**
