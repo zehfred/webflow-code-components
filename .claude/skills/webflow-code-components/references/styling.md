@@ -267,28 +267,210 @@ export const MyComponent = () => {
 };
 ```
 
-## Responsive Design
+## Responsive Design & Webflow Breakpoints
 
-Use standard CSS media queries:
+### Understanding Webflow Breakpoints
+
+Webflow uses a predefined set of responsive breakpoints (also called media queries) that determine how designs adapt to different screen sizes. When building code components, you should align your CSS media queries with these breakpoints to ensure consistency with the Webflow Designer.
+
+#### Default Breakpoints
+
+| Breakpoint | ID | Width | Description |
+|------------|-----|-------|-------------|
+| **Desktop (base)** | `main` | No minimum | Default breakpoint, applies to all devices unless overridden |
+| **Tablet** | `medium` | ≤ 991px | Tablet devices and small desktops |
+| **Mobile Landscape** | `small` | ≤ 767px | Phones in landscape orientation |
+| **Mobile Portrait** | `tiny` | ≤ 478px | Phones in portrait orientation |
+
+#### Optional Larger Breakpoints
+
+These can be enabled in the Webflow Designer (once enabled, they cannot be removed):
+
+| Breakpoint | ID | Width |
+|------------|-----|-------|
+| **1920px** | `xxl` | ≥ 1920px |
+| **1440px** | `xl` | ≥ 1440px |
+| **1280px** | `large` | ≥ 1280px |
+
+### Cascade Behavior
+
+Webflow uses **bidirectional cascading** from the desktop (base) breakpoint:
+- **Upward cascade**: Styles set on desktop, 1280px, 1440px cascade up to larger screens
+- **Downward cascade**: Styles set on desktop cascade down to tablet → mobile landscape → mobile portrait
+- **Override behavior**: Styles set on smaller breakpoints override styles from larger breakpoints above them
+
+This means you should design "mobile-first" or "desktop-first" depending on your approach, knowing that styles will cascade in both directions from the base breakpoint.
+
+### Aligning CSS with Webflow Breakpoints
+
+Use CSS media queries that match Webflow's breakpoint widths:
 
 ```css
 /* Card.module.css */
+
+/* Desktop (base) - no media query needed */
 .card {
-  width: 100%;
-  padding: 16px;
+  width: 33.333%;
+  padding: 32px;
 }
 
-@media (min-width: 768px) {
+/* Tablet - 991px and below */
+@media (max-width: 991px) {
   .card {
     width: 50%;
     padding: 24px;
   }
 }
 
+/* Mobile Landscape - 767px and below */
+@media (max-width: 767px) {
+  .card {
+    width: 100%;
+    padding: 20px;
+  }
+}
+
+/* Mobile Portrait - 478px and below */
+@media (max-width: 478px) {
+  .card {
+    padding: 16px;
+  }
+}
+
+/* Optional: Larger breakpoints (if enabled in Designer) */
+@media (min-width: 1280px) {
+  .card {
+    width: 25%;
+    padding: 40px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .card {
+    max-width: 1920px;
+    margin: 0 auto;
+  }
+}
+```
+
+### Mobile-First Approach
+
+You can also use a mobile-first approach with `min-width` queries:
+
+```css
+/* Mobile Portrait (base) */
+.card {
+  width: 100%;
+  padding: 16px;
+}
+
+/* Mobile Landscape - 768px and up */
+@media (min-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+}
+
+/* Tablet - 992px and up */
+@media (min-width: 992px) {
+  .card {
+    width: 50%;
+    padding: 24px;
+  }
+}
+
+/* Desktop - 1200px and up (comfortable desktop viewing) */
 @media (min-width: 1200px) {
   .card {
     width: 33.333%;
     padding: 32px;
+  }
+}
+```
+
+### Accessing Current Breakpoint (Designer API)
+
+If you need to detect the current breakpoint in the Webflow Designer (for Designer Extensions or advanced use cases), you can use the Designer API:
+
+```typescript
+import webflow from '@webflow/designer';
+
+// Get current breakpoint
+const breakpoint = await webflow.getMediaQuery();
+// Returns: 'xxl' | 'xl' | 'large' | 'main' | 'medium' | 'small' | 'tiny'
+
+// Subscribe to breakpoint changes
+const unsubscribe = webflow.subscribe('mediaquery', (breakpoint) => {
+  console.log('Breakpoint changed to:', breakpoint);
+  // breakpoint is one of: 'xxl', 'xl', 'large', 'main', 'medium', 'small', 'tiny'
+});
+
+// Later: unsubscribe
+unsubscribe();
+```
+
+### Best Practices for Responsive Components
+
+1. **Match Webflow breakpoints**: Use the exact pixel values (991px, 767px, 478px) to ensure consistency
+2. **Test across breakpoints**: Preview your component at each breakpoint in the Designer
+3. **Use relative units**: Consider using `rem`, `em`, or `%` for better scalability
+4. **Leverage CSS variables**: Use Webflow's site variables for spacing/sizing to maintain consistency
+5. **Consider touch targets**: Ensure interactive elements are at least 44x44px on mobile
+6. **Test on real devices**: The Designer preview is helpful but test on actual phones/tablets
+
+### Common Responsive Patterns
+
+```css
+/* Container width management */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md, 16px);
+}
+
+@media (max-width: 991px) {
+  .container {
+    padding: 0 var(--spacing-sm, 12px);
+  }
+}
+
+/* Flexible grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-lg, 24px);
+}
+
+@media (max-width: 991px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md, 16px);
+  }
+}
+
+@media (max-width: 767px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm, 12px);
+  }
+}
+
+/* Responsive typography */
+.heading {
+  font-size: var(--font-sizes-2xl, 32px);
+  line-height: 1.2;
+}
+
+@media (max-width: 991px) {
+  .heading {
+    font-size: var(--font-sizes-xl, 24px);
+  }
+}
+
+@media (max-width: 478px) {
+  .heading {
+    font-size: var(--font-sizes-lg, 20px);
   }
 }
 ```
