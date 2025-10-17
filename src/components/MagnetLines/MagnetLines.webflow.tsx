@@ -7,47 +7,82 @@ export default declareComponent(MagnetLines, {
   description: 'Lines that rotate to point at your cursor like magnetic needles',
   group: 'Interactive',
   props: {
+    // Grid Group
     rows: props.Number({
       name: 'Rows',
       defaultValue: 9,
       min: 3,
       max: 20,
+      group: 'Grid',
     }),
     columns: props.Number({
       name: 'Columns',
       defaultValue: 9,
       min: 3,
       max: 20,
-    }),
-    containerSize: props.Text({
-      name: 'Container Size',
-      defaultValue: '60vmin',
-    }),
-    lineHeight: props.Text({
-      name: 'Line Height',
-      defaultValue: '4vmin',
-    }),
-    lineWidth: props.Text({
-      name: 'Line Width',
-      defaultValue: '4vmin',
-    }),
-    borderRadius: props.Text({
-      name: 'Border Radius',
-      defaultValue: '2px',
+      group: 'Grid',
     }),
     gap: props.Text({
       name: 'Gap',
       defaultValue: '0px',
+      group: 'Grid',
+      tooltip: 'Space between lines (e.g., "0px", "2px", "0.5vmin")',
     }),
-    backgroundColor: props.Text({
+
+    // Style Group
+    lineWidth: props.Text({
+      name: 'Line Width',
+      defaultValue: '4vmin',
+      group: 'Style',
+      tooltip: 'Width of each line (e.g., "4vmin", "20px", "2rem")',
+    }),
+    lineHeight: props.Text({
+      name: 'Line Height',
+      defaultValue: '4vmin',
+      group: 'Style',
+      tooltip: 'Height of each line (e.g., "4vmin", "20px", "2rem")',
+    }),
+    borderRadius: props.Text({
+      name: 'Border Radius',
+      defaultValue: '2px',
+      group: 'Style',
+      tooltip: 'Rounded corners for lines (e.g., "2px", "50%")',
+    }),
+    backgroundColor: props.Color({
       name: 'Background Color',
       defaultValue: '#000000',
+      group: 'Style',
+    }),
+
+    // Colors Group
+    color1: props.Color({
+      name: 'Color 1',
+      defaultValue: '#00ff00',
+      group: 'Colors',
+      tooltip: 'Primary line color (required)',
+    }),
+    color2: props.Color({
+      name: 'Color 2',
+      group: 'Colors',
+      tooltip: 'Second color for checkerboard pattern (optional)',
+    }),
+    color3: props.Color({
+      name: 'Color 3',
+      group: 'Colors',
+      tooltip: 'Third color for checkerboard pattern (optional)',
+    }),
+    color4: props.Color({
+      name: 'Color 4',
+      group: 'Colors',
+      tooltip: 'Fourth color for checkerboard pattern (optional)',
     }),
     baseAngle: props.Number({
       name: 'Base Angle',
       defaultValue: 0,
       min: -90,
       max: 90,
+      group: 'Colors',
+      tooltip: 'Default rotation angle when mouse is not hovering',
     }),
   },
   options: {

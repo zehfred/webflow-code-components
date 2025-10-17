@@ -5,15 +5,16 @@ interface MagnetLinesProps {
   rows?: number;
   columns?: number;
   containerSize?: string;
-  lineColor?: string;
   lineWidth?: string;
   lineHeight?: string;
   borderRadius?: string;
   baseAngle?: number;
   gap?: string;
   backgroundColor?: string;
-  multicolor?: boolean;
-  colorPalette?: string[];
+  color1?: string;
+  color2?: string;
+  color3?: string;
+  color4?: string;
   className?: string;
   style?: CSSProperties;
 }
@@ -22,15 +23,16 @@ const MagnetLines: React.FC<MagnetLinesProps> = ({
   rows = 9,
   columns = 9,
   containerSize = '100%',
-  lineColor = '#00ff00',
   lineWidth = '4vmin',
   lineHeight = '4vmin',
   borderRadius = '2px',
   baseAngle = 0,
   gap = '0px',
   backgroundColor = '#000000',
-  multicolor = false,
-  colorPalette = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
+  color1,
+  color2,
+  color3,
+  color4,
   className = '',
   style = {}
 }) => {
@@ -111,14 +113,22 @@ const MagnetLines: React.FC<MagnetLinesProps> = ({
         container.removeEventListener('mouseleave', mouseLeaveHandlerRef.current);
       }
     };
-  }, [rows, columns, multicolor, colorPalette, baseAngle]);
+  }, [rows, columns, color1, color2, color3, color4, baseAngle]);
+
+  // Collect defined colors
+  const colors = [color1, color2, color3, color4].filter(Boolean) as string[];
+  // Default to green if no colors provided
+  const activeColors = colors.length > 0 ? colors : ['#00ff00'];
+  const numColors = activeColors.length;
 
   const total = rows * columns;
   const spans = Array.from({ length: total }, (_, i) => {
-    const color = multicolor 
-      ? colorPalette[Math.floor(Math.random() * colorPalette.length)]
-      : lineColor;
-    
+    // Calculate row and column for checkerboard pattern
+    const row = Math.floor(i / columns);
+    const col = i % columns;
+    const colorIndex = (row + col) % numColors;
+    const color = activeColors[colorIndex];
+
     return (
       <span
         key={i}

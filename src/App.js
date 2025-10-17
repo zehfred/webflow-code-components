@@ -5,6 +5,7 @@ import Particles from './components/Particles/Particles.tsx';
 import MagnetLines from './components/MagnetLines/MagnetLines.tsx';
 import GridMotion from './components/GridMotion/GridMotion.tsx';
 import FAQ from './components/FAQ/FAQ.tsx';
+import Modal from './components/Modal/Modal.tsx';
 
 // Component Registry - Add new components here
 const componentRegistry = [
@@ -357,6 +358,154 @@ const componentRegistry = [
       },
     },
   },
+  {
+    name: 'Modal',
+    component: Modal,
+    wrapperStyle: { width: '100%', minHeight: '400px', position: 'relative' },
+    props: {
+      id: {
+        type: 'text',
+        name: 'Modal ID',
+        defaultValue: 'demo-modal',
+      },
+      previewMode: {
+        type: 'boolean',
+        name: 'Preview Mode',
+        defaultValue: true,
+      },
+      placement: {
+        type: 'variant',
+        name: 'Placement',
+        defaultValue: 'center',
+        options: [
+          { value: 'auto', label: 'Auto' },
+          { value: 'top', label: 'Top' },
+          { value: 'bottom', label: 'Bottom' },
+          { value: 'center', label: 'Center' },
+          { value: 'top-center', label: 'Top Center' },
+          { value: 'bottom-center', label: 'Bottom Center' },
+        ],
+      },
+      scrollBehavior: {
+        type: 'variant',
+        name: 'Scroll Behavior',
+        defaultValue: 'inside',
+        options: [
+          { value: 'inside', label: 'Inside' },
+          { value: 'outside', label: 'Outside' },
+        ],
+      },
+      maxWidth: {
+        type: 'text',
+        name: 'Max Width',
+        defaultValue: '600px',
+      },
+      maxHeight: {
+        type: 'text',
+        name: 'Max Height',
+        defaultValue: '',
+      },
+      backdrop: {
+        type: 'variant',
+        name: 'Backdrop',
+        defaultValue: 'opaque',
+        options: [
+          { value: 'opaque', label: 'Opaque' },
+          { value: 'blur', label: 'Blur' },
+          { value: 'transparent', label: 'Transparent' },
+        ],
+      },
+      backdropColor: {
+        type: 'color',
+        name: 'Backdrop Color',
+        defaultValue: 'rgba(0, 0, 0, 0.5)',
+      },
+      borderRadius: {
+        type: 'text',
+        name: 'Border Radius',
+        defaultValue: '12px',
+      },
+      shadow: {
+        type: 'text',
+        name: 'Shadow',
+        defaultValue: '0 10px 40px rgba(0, 0, 0, 0.1)',
+      },
+      padding: {
+        type: 'text',
+        name: 'Padding',
+        defaultValue: '32px',
+      },
+      showCloseButton: {
+        type: 'boolean',
+        name: 'Show Close Button',
+        defaultValue: true,
+      },
+      closeButtonColor: {
+        type: 'color',
+        name: 'Close Button Color',
+        defaultValue: '#000000',
+      },
+      closeButtonPosition: {
+        type: 'variant',
+        name: 'Close Button Position',
+        defaultValue: 'top-right',
+        options: [
+          { value: 'top-right', label: 'Top Right' },
+          { value: 'top-left', label: 'Top Left' },
+          { value: 'inside-right', label: 'Inside Right' },
+          { value: 'inside-left', label: 'Inside Left' },
+        ],
+      },
+      closeOnBackdropClick: {
+        type: 'boolean',
+        name: 'Close on Backdrop Click',
+        defaultValue: true,
+      },
+      closeOnEscape: {
+        type: 'boolean',
+        name: 'Close on Escape',
+        defaultValue: true,
+      },
+      blockPageScroll: {
+        type: 'boolean',
+        name: 'Block Page Scroll',
+        defaultValue: true,
+      },
+      updateUrlHash: {
+        type: 'boolean',
+        name: 'Update URL Hash',
+        defaultValue: true,
+      },
+      animationStyle: {
+        type: 'variant',
+        name: 'Animation',
+        defaultValue: 'fade-scale',
+        options: [
+          { value: 'fade', label: 'Fade' },
+          { value: 'fade-scale', label: 'Fade Scale' },
+          { value: 'slide-up', label: 'Slide Up' },
+          { value: 'slide-down', label: 'Slide Down' },
+          { value: 'none', label: 'None' },
+        ],
+      },
+      animationDuration: {
+        type: 'number',
+        name: 'Animation Duration',
+        defaultValue: 300,
+        min: 0,
+        max: 2000,
+        step: 50,
+      },
+      zIndex: {
+        type: 'number',
+        name: 'Z-Index',
+        defaultValue: 9999,
+        min: 1,
+        max: 99999,
+        step: 1,
+      },
+    },
+  },
   // Add more components here as they are created
 ];
 
@@ -397,11 +546,16 @@ const VariantControl = ({ label, value, options, onChange }) => (
         fontSize: '14px',
       }}
     >
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
+      {options.map((option) => {
+        // Support both string arrays and value/label objects
+        const optionValue = typeof option === 'string' ? option : option.value;
+        const optionLabel = typeof option === 'string' ? option : option.label;
+        return (
+          <option key={optionValue} value={optionValue}>
+            {optionLabel}
+          </option>
+        );
+      })}
     </select>
   </div>
 );
@@ -583,6 +737,36 @@ const sampleFAQItems = (
   </div>
 );
 
+// Sample Modal content for testing
+const sampleModalContent = (
+  <div style={{ textAlign: 'center' }}>
+    <h2 style={{ marginTop: 0, marginBottom: '16px', fontSize: '24px', fontWeight: 'bold' }}>
+      Welcome to the Modal
+    </h2>
+    <p style={{ marginBottom: '16px', color: '#666', lineHeight: '1.6' }}>
+      This is a sample modal component. You can add any content here - text, images, forms, or any other elements.
+    </p>
+    <p style={{ marginBottom: '24px', color: '#666', lineHeight: '1.6' }}>
+      Try adjusting the controls below to see how the modal changes!
+    </p>
+    <button
+      data-modal-close="demo-modal"
+      style={{
+        padding: '12px 24px',
+        backgroundColor: '#0073e6',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '16px',
+        fontWeight: '500',
+      }}
+    >
+      Close Modal
+    </button>
+  </div>
+);
+
 // Component Showcase Item
 const ComponentShowcase = ({ config }) => {
   const { name, component: Component, props: propDefs, wrapperStyle } = config;
@@ -627,6 +811,8 @@ const ComponentShowcase = ({ config }) => {
         <div style={wrapperStyle || { width: '100%' }}>
           {name === 'FAQ' ? (
             <Component {...propValues}>{sampleFAQItems}</Component>
+          ) : name === 'Modal' ? (
+            <Component {...propValues}>{sampleModalContent}</Component>
           ) : (
             <Component {...propValues} />
           )}
