@@ -30,8 +30,10 @@ interface Dot {
 export interface DotGridProps {
   dotSize?: number;
   gap?: number;
-  baseColor?: string;
-  activeColor?: string;
+  color1?: string;
+  color2?: string;
+  color3?: string;
+  color4?: string;
   backgroundColor?: string;
   proximity?: number;
   speedTrigger?: number;
@@ -40,8 +42,6 @@ export interface DotGridProps {
   maxSpeed?: number;
   resistance?: number;
   returnDuration?: number;
-  multicolor?: boolean;
-  colorPalette?: string[];
   blur?: boolean;
   className?: string;
   style?: React.CSSProperties;
@@ -60,8 +60,10 @@ function hexToRgb(hex: string) {
 const DotGrid: React.FC<DotGridProps> = ({
   dotSize = 16,
   gap = 32,
-  baseColor = '#5227FF',
-  activeColor = '#5227FF',
+  color1 = '#5227FF',
+  color2 = '#5227FF',
+  color3 = '#5227FF',
+  color4,
   backgroundColor = 'transparent',
   proximity = 150,
   speedTrigger = 100,
@@ -70,8 +72,6 @@ const DotGrid: React.FC<DotGridProps> = ({
   maxSpeed = 5000,
   resistance = 750,
   returnDuration = 1.5,
-  multicolor = false,
-  colorPalette = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
   blur = false,
   className = '',
   style
@@ -90,9 +90,6 @@ const DotGrid: React.FC<DotGridProps> = ({
     lastY: 0
   });
   const isMouseInsideRef = useRef(false);
-
-  const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
-  const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
 
   const circlePath = useMemo(() => {
     if (typeof window === 'undefined' || typeof Path2D === 'undefined') return null;
@@ -130,25 +127,27 @@ const DotGrid: React.FC<DotGridProps> = ({
     const startX = extraX / 2 + dotSize / 2;
     const startY = extraY / 2 + dotSize / 2;
 
+    // Build palette from individual color props, filtering out undefined values
+    const palette = [color1, color2, color3, color4].filter(Boolean);
+    // Fall back to default color if no colors are provided
+    const finalPalette = palette.length > 0 ? palette : ['#5227FF'];
+
     const dots: Dot[] = [];
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const cx = startX + x * cell;
         const cy = startY + y * cell;
-        const color = multicolor 
-          ? colorPalette[Math.floor(Math.random() * colorPalette.length)]
-          : undefined;
+        const color = finalPalette[Math.floor(Math.random() * finalPalette.length)];
         dots.push({ cx, cy, xOffset: 0, yOffset: 0, _inertiaApplied: false, color });
       }
     }
     dotsRef.current = dots;
-  }, [dotSize, gap, multicolor, colorPalette]);
+  }, [dotSize, gap, color1, color2, color3, color4]);
 
   useEffect(() => {
     if (!circlePath) return;
 
     let rafId: number;
-    const proxSq = proximity * proximity;
 
     const draw = () => {
       const canvas = canvasRef.current;
@@ -157,35 +156,13 @@ const DotGrid: React.FC<DotGridProps> = ({
       if (!ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const { x: px, y: py } = pointerRef.current;
-
       for (const dot of dotsRef.current) {
         const ox = dot.cx + dot.xOffset;
         const oy = dot.cy + dot.yOffset;
-        const dx = dot.cx - px;
-        const dy = dot.cy - py;
-        const dsq = dx * dx + dy * dy;
-
-        let style: string;
-        if (multicolor && dot.color) {
-          // Use the dot's assigned color in multicolor mode
-          style = dot.color;
-        } else {
-          // Use base/active color interpolation
-          style = baseColor;
-          if (dsq <= proxSq) {
-            const dist = Math.sqrt(dsq);
-            const t = 1 - dist / proximity;
-            const r = Math.round(baseRgb.r + (activeRgb.r - baseRgb.r) * t);
-            const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * t);
-            const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * t);
-            style = `rgb(${r},${g},${b})`;
-          }
-        }
 
         ctx.save();
         ctx.translate(ox, oy);
-        ctx.fillStyle = style;
+        ctx.fillStyle = dot.color!;
         ctx.fill(circlePath);
         ctx.restore();
       }
@@ -195,7 +172,7 @@ const DotGrid: React.FC<DotGridProps> = ({
 
     draw();
     return () => cancelAnimationFrame(rafId);
-  }, [proximity, baseColor, activeRgb, baseRgb, circlePath, multicolor]);
+  }, [circlePath]);
 
   useEffect(() => {
     buildGrid();

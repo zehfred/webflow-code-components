@@ -48,33 +48,34 @@ export default declareComponent(MagnetLines, {
       group: 'Style',
       tooltip: 'Rounded corners for lines (e.g., "2px", "50%")',
     }),
-    backgroundColor: props.Color({
+    backgroundColor: props.Text({
       name: 'Background Color',
       defaultValue: '#000000',
       group: 'Style',
+      tooltip: 'Background color (e.g., #000000 or var(--bg-color))',
     }),
 
     // Colors Group
-    color1: props.Color({
+    color1: props.Text({
       name: 'Color 1',
       defaultValue: '#00ff00',
       group: 'Colors',
-      tooltip: 'Primary line color (required)',
+      tooltip: 'Primary line color (e.g., #00ff00 or var(--line-color-1))',
     }),
-    color2: props.Color({
+    color2: props.Text({
       name: 'Color 2',
       group: 'Colors',
-      tooltip: 'Second color for checkerboard pattern (optional)',
+      tooltip: 'Second color for checkerboard pattern (optional, e.g., #ff0000 or var(--line-color-2))',
     }),
-    color3: props.Color({
+    color3: props.Text({
       name: 'Color 3',
       group: 'Colors',
-      tooltip: 'Third color for checkerboard pattern (optional)',
+      tooltip: 'Third color for checkerboard pattern (optional, e.g., #0000ff or var(--line-color-3))',
     }),
-    color4: props.Color({
+    color4: props.Text({
       name: 'Color 4',
       group: 'Colors',
-      tooltip: 'Fourth color for checkerboard pattern (optional)',
+      tooltip: 'Fourth color for checkerboard pattern (optional, e.g., #ffff00 or var(--line-color-4))',
     }),
     baseAngle: props.Number({
       name: 'Base Angle',

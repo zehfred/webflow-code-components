@@ -130,9 +130,12 @@ Quick reference for available prop types:
 | `props.Variant()` | `string` | Dropdown options |
 | `props.Visibility()` | `boolean` | Show/hide controls |
 | `props.Slot()` | `ReactNode` | Flexible content areas |
-| `props.ID()` | `string` | HTML element IDs |
+| `props.Color()` | `string` | Color picker ⚠️ **NOT YET AVAILABLE** |
+| `props.ID()` | `string` | HTML element IDs ⚠️ **NOT YET AVAILABLE** |
 
 **For detailed configuration options for each prop type, refer to `references/prop-types.md`.**
+
+**Note:** Some prop types are documented but not yet available in the current Webflow release. Do not use prop types marked as "NOT YET AVAILABLE".
 
 ## Wrapper Components for Link Props
 

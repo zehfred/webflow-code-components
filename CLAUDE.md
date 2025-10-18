@@ -77,12 +77,12 @@ Use `@webflow/data-types` for Webflow prop declarations:
 - `props.Number()` - Numeric input with min/max/decimals
 - `props.Boolean()` - True/false toggle
 - `props.Variant()` - Dropdown with predefined options
-- `props.Color()` - Color picker
 - `props.Image()` - Image upload/selection (returns URL string)
 - `props.Link()` - URL input (returns object with href/target/preload)
 - `props.Visibility()` - Show/hide controls for conditional rendering
 - `props.Slot()` - Container for child elements (FAQ component uses this)
-- `props.ID()` - HTML element ID for anchors/accessibility
+- `props.Color()` - Color picker **(NOT YET AVAILABLE)**
+- `props.ID()` - HTML element ID for anchors/accessibility **(NOT YET AVAILABLE)**
 
 **Common configuration options:**
 - `name` - Display name in Webflow Designer (required)

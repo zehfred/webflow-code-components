@@ -665,6 +665,250 @@ export class ErrorBoundary extends Component<Props, State> {
 </ErrorBoundary>
 ```
 
+## Designer Environment Detection
+
+### Why Detection Is Needed
+
+Interactive components (modals, dropdowns, tooltips, etc.) can trap designers in the Webflow Designer canvas. When designers click trigger buttons to select or edit them, the component's functionality activates instead - opening a modal they can't close, showing a dropdown that blocks the interface, etc.
+
+**The Problem:**
+```tsx
+// ❌ This modal opens when designer clicks trigger button
+useEffect(() => {
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-modal-trigger]');
+    if (trigger) {
+      openModal();  // Traps designer in modal!
+    }
+  });
+}, []);
+```
+
+### Why `previewMode` Prop Isn't Enough
+
+Many components have a `previewMode` prop to show the component in the Designer for editing. However, this only controls **visibility**, not **functionality**:
+
+```tsx
+// ❌ PreviewMode shows modal, but interactions still work
+interface Props {
+  previewMode?: boolean;  // Controls display only
+}
+
+// Modal is visible for editing, BUT:
+// - Clicking triggers still opens modal
+// - Event listeners are still attached
+// - Designers get trapped
+```
+
+### The Solution: Environment Detection
+
+Detect if your component is running inside the Webflow Designer canvas iframe:
+
+```typescript
+// ✅ Detect Webflow Designer environment
+const isWebflowDesigner = (): boolean => {
+  if (typeof window === 'undefined') return false;
+
+  // Check if in iframe AND on Webflow domains
+  const inIframe = window.self !== window.top;
+  const webflowDomain = window.location.hostname.includes('webflow.com') ||
+                         window.location.hostname.includes('webflow.io');
+
+  return inIframe && webflowDomain;
+};
+```
+
+**How it works:**
+- `window.self !== window.top` - Detects if code is running in an iframe
+- Hostname check - Confirms it's a Webflow domain (not user's published site in an iframe)
+- Returns `true` only in Webflow Designer canvas
+
+### Implementation Pattern
+
+Add environment detection to your component:
+
+```tsx
+import { useState, useEffect, useCallback } from 'react';
+
+// Detection utility
+const isWebflowDesigner = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const inIframe = window.self !== window.top;
+  const webflowDomain = window.location.hostname.includes('webflow.com') ||
+                         window.location.hostname.includes('webflow.io');
+  return inIframe && webflowDomain;
+};
+
+export const Modal = ({ id, previewMode, ...props }: ModalProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDesigner, setIsDesigner] = useState(false);
+
+  // Detect environment on mount
+  useEffect(() => {
+    setIsDesigner(isWebflowDesigner());
+  }, []);
+
+  // Disable interactions in Designer
+  const openModal = useCallback(() => {
+    if (isDesigner) return;  // ✅ No-op in Designer
+    setIsOpen(true);
+  }, [isDesigner]);
+
+  // Disable event listeners in Designer
+  useEffect(() => {
+    if (isDesigner) return;  // ✅ Don't attach listeners
+
+    const handleClick = (e: MouseEvent) => {
+      const trigger = e.target.closest(`[data-modal-trigger="${id}"]`);
+      if (trigger) openModal();
+    };
+
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [id, openModal, isDesigner]);
+
+  // Modal still visible in Designer for editing (if previewMode=true)
+  // But all interactions are disabled
+  return <div>...</div>;
+};
+```
+
+### What to Disable
+
+When `isDesigner` is true, disable:
+
+```tsx
+// ✅ Disable all these in Designer
+- Event listeners (click, keydown, scroll, etc.)
+- Modal/dropdown opening functions
+- URL hash changes
+- Focus trapping
+- Scroll blocking
+- Any state changes triggered by user interaction
+```
+
+### What NOT to Disable
+
+Keep these working in Designer:
+
+```tsx
+// ✅ Keep these working for editing
+- Component rendering (designers need to see it)
+- PreviewMode visibility (for content editing)
+- Static styling
+- Layout
+- CSS animations/transitions
+```
+
+### Complete Example
+
+Based on the Modal component implementation:
+
+```tsx
+const isWebflowDesigner = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const inIframe = window.self !== window.top;
+  const webflowDomain = window.location.hostname.includes('webflow.com') ||
+                         window.location.hostname.includes('webflow.io');
+  return inIframe && webflowDomain;
+};
+
+export const Modal: React.FC<ModalProps> = ({
+  id,
+  previewMode = false,
+  closeOnEscape = true,
+  ...props
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDesigner, setIsDesigner] = useState(false);
+
+  // Detect environment once on mount
+  useEffect(() => {
+    setIsDesigner(isWebflowDesigner());
+  }, []);
+
+  // Functions with Designer guards
+  const openModal = useCallback(() => {
+    if (isDesigner) return;
+    setIsOpen(true);
+  }, [isDesigner]);
+
+  const closeModal = useCallback(() => {
+    if (isDesigner) return;
+    setIsOpen(false);
+  }, [isDesigner]);
+
+  // Trigger click handler - disabled in Designer
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (isDesigner) return;  // No listeners in Designer
+
+    const handleClick = (e: MouseEvent) => {
+      const trigger = (e.target as HTMLElement).closest(`[data-modal-trigger="${id}"]`);
+      if (trigger) {
+        e.preventDefault();
+        openModal();
+      }
+    };
+
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [id, openModal, isDesigner]);
+
+  // Close button handler - disabled in Designer
+  useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') return;
+    if (isDesigner) return;
+
+    const handleCloseClick = (e: MouseEvent) => {
+      const closeBtn = (e.target as HTMLElement).closest('[data-modal-close]');
+      if (closeBtn) closeModal();
+    };
+
+    document.addEventListener('click', handleCloseClick);
+    return () => document.removeEventListener('click', handleCloseClick);
+  }, [isOpen, closeModal, isDesigner]);
+
+  // Escape key handler - disabled in Designer
+  useEffect(() => {
+    if (!isOpen || !closeOnEscape) return;
+    if (typeof document === 'undefined') return;
+    if (isDesigner) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeModal();
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, closeOnEscape, closeModal, isDesigner]);
+
+  // Show modal in Designer (previewMode) or when open
+  const shouldShow = previewMode || isOpen;
+
+  return (
+    <div style={{ display: shouldShow ? 'block' : 'none' }}>
+      {/* Modal content */}
+    </div>
+  );
+};
+```
+
+### Key Takeaways
+
+**Do:**
+- ✅ Always detect Designer environment for interactive components
+- ✅ Disable ALL event listeners when in Designer
+- ✅ Disable ALL user-triggered actions when in Designer
+- ✅ Keep `previewMode` for showing components during editing
+- ✅ Add `isDesigner` to useEffect/useCallback dependencies
+
+**Don't:**
+- ❌ Don't rely only on `previewMode` prop for behavior control
+- ❌ Don't forget to guard helper functions (`openModal`, `closeModal`, etc.)
+- ❌ Don't disable rendering/styling in Designer
+- ❌ Don't forget to add guards to hash changes, scroll blocking, etc.
+
 ## Testing
 
 ### Test Components in Isolation

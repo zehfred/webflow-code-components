@@ -557,6 +557,167 @@ See [Data Fetching](./data-fetching.md) for more details.
    - Update instances in Designer
    - Remove old props in next version
 
+## Designer Interaction Issues
+
+### Component Interactions Work in Designer Canvas (Should Be Disabled)
+
+**Problem:** When clicking trigger buttons/elements in the Webflow Designer canvas, the component's functionality activates instead of allowing you to edit the element. For example:
+- Clicking a modal trigger button opens the modal (can't edit the button)
+- Clicking a dropdown trigger shows the dropdown (can't style the trigger)
+- Clicking a tooltip trigger activates tooltip (get stuck and can't close it)
+
+**Why this happens:**
+
+The `previewMode` prop only controls component **visibility**, not **functionality**. Event listeners are still attached even when `previewMode={true}`, so clicks still trigger actions.
+
+```tsx
+// ❌ Common mistake - previewMode doesn't disable interactions
+export const Modal = ({ previewMode }: Props) => {
+  useEffect(() => {
+    // This listener still attaches even if previewMode=true
+    document.addEventListener('click', handleTriggerClick);
+  }, []);
+
+  // previewMode only controls display
+  return <div style={{ display: previewMode ? 'block' : 'none' }}>...</div>;
+};
+```
+
+**Solution:**
+
+Add environment detection to determine if the component is running in the Webflow Designer canvas:
+
+```tsx
+// ✅ Detect Webflow Designer environment
+const isWebflowDesigner = (): boolean => {
+  if (typeof window === 'undefined') return false;
+
+  const inIframe = window.self !== window.top;
+  const webflowDomain = window.location.hostname.includes('webflow.com') ||
+                         window.location.hostname.includes('webflow.io');
+
+  return inIframe && webflowDomain;
+};
+
+export const Modal = ({ previewMode }: Props) => {
+  const [isDesigner, setIsDesigner] = useState(false);
+
+  // Detect environment on mount
+  useEffect(() => {
+    setIsDesigner(isWebflowDesigner());
+  }, []);
+
+  // Disable event listeners in Designer
+  useEffect(() => {
+    if (isDesigner) return;  // ✅ Don't attach listeners in Designer
+
+    const handleTriggerClick = (e: MouseEvent) => {
+      // Handle trigger clicks
+    };
+
+    document.addEventListener('click', handleTriggerClick);
+    return () => document.removeEventListener('click', handleTriggerClick);
+  }, [isDesigner]);
+
+  // Modal visible in Designer (previewMode), but interactions disabled
+  return <div style={{ display: previewMode ? 'block' : 'none' }}>...</div>;
+};
+```
+
+**What to disable in Designer:**
+- All event listeners (`click`, `keydown`, `scroll`, etc.)
+- Modal/dropdown/tooltip opening functions
+- URL hash changes
+- Focus trapping
+- Scroll blocking
+- Any user-triggered state changes
+
+**How to test:**
+1. Add environment detection to your component
+2. Add guards to all event listeners: `if (isDesigner) return;`
+3. Run `npx webflow library share`
+4. In Designer, click trigger elements - they should be selectable/editable
+5. On published site, triggers should work normally
+
+**See also:**
+- [Best Practices - Designer Environment Detection](./best-practices.md#designer-environment-detection)
+
+### Component Interactions Don't Work on Published Site
+
+**Problem:** Component renders correctly but has no interactivity on the published site:
+- Clicking buttons does nothing
+- Keyboard shortcuts don't work
+- Event handlers aren't firing
+- No errors in browser console
+
+**How to diagnose:**
+
+1. **Check browser console** for `TypeError` or `undefined` errors
+2. **Inspect the component** in browser DevTools
+3. **Look for `data-hydrate` attribute** on the component's code-island element
+
+**Example of the problem:**
+
+```html
+<!-- ❌ If you see data-hydrate="false", React isn't running -->
+<code-island data-hydrate="false" ...>
+  <template shadowrootmode="open">
+    <!-- Static HTML with no interactivity -->
+  </template>
+</code-island>
+```
+
+**Common causes:**
+
+1. **Missing browser API guards** - Component crashes during server-side rendering
+2. **Incorrect SSR setting** - Need to verify SSR configuration
+3. **JavaScript errors** - Check browser console for errors
+4. **Missing event listener cleanup** - Memory leaks preventing hydration
+
+**Solutions:**
+
+1. **Add browser API guards** to all browser-specific code:
+
+```tsx
+// ✅ Guard browser APIs
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+  if (typeof document === 'undefined') return;
+
+  const handleClick = (e: MouseEvent) => {
+    // Browser API code
+  };
+
+  document.addEventListener('click', handleClick);
+  return () => document.removeEventListener('click', handleClick);
+}, []);
+```
+
+2. **Check browser console** for errors when component loads
+
+3. **Verify event listeners** are attached:
+```tsx
+// In browser console
+getEventListeners(document)  // Check for your listeners
+```
+
+4. **Test incrementally** - Start with a minimal interactive component:
+```tsx
+// Minimal test component
+export const Test = () => {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
+};
+```
+
+If the minimal component works, add features back one at a time to identify what breaks interactivity.
+
+**Important notes:**
+- All browser APIs (`window`, `document`, `navigator`, etc.) need guards
+- Clean up event listeners in useEffect return functions
+- Check for errors during component initialization
+- Verify all dependencies are installed and bundled correctly
+
 ## Getting Help
 
 If you're still stuck:

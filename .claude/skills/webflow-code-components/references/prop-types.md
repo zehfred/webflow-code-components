@@ -244,7 +244,29 @@ export const Card: React.FC<CardProps> = ({ children }) => {
 
 ---
 
+### Color
+
+⚠️ **NOT YET AVAILABLE** - This prop type is documented but not yet available in the current Webflow release.
+
+Color picker for custom color selection.
+
+```tsx
+props.Color({
+  name: 'Background Color',
+  defaultValue: '#007bff',
+  group: 'Style'
+})
+```
+
+**Returns:** `string` (hex color code)
+
+**Use for:** Custom colors, theme colors, brand colors
+
+---
+
 ### ID
+
+⚠️ **NOT YET AVAILABLE** - This prop type is documented but not yet available in the current Webflow release.
 
 HTML element ID.
 
