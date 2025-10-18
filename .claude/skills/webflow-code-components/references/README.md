@@ -21,6 +21,7 @@ Complete guide to building and importing React components into Webflow.
 
 ### Development & Deployment
 - **[Webflow CLI](./cli-reference.md)** - Commands for bundling and importing
+- **[Webflow Designer MCP](./webflow-designer-mcp.md)** - Managing Webflow sites with MCP tools (optional)
 - **[Best Practices](./best-practices.md)** - Recommendations and patterns
 - **[Troubleshooting](./troubleshooting.md)** - Common issues and solutions
 

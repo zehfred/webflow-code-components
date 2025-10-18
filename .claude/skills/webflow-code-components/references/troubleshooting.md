@@ -568,59 +568,38 @@ See [Data Fetching](./data-fetching.md) for more details.
 
 **Why this happens:**
 
-The `previewMode` prop only controls component **visibility**, not **functionality**. Event listeners are still attached even when `previewMode={true}`, so clicks still trigger actions.
-
-```tsx
-// ❌ Common mistake - previewMode doesn't disable interactions
-export const Modal = ({ previewMode }: Props) => {
-  useEffect(() => {
-    // This listener still attaches even if previewMode=true
-    document.addEventListener('click', handleTriggerClick);
-  }, []);
-
-  // previewMode only controls display
-  return <div style={{ display: previewMode ? 'block' : 'none' }}>...</div>;
-};
-```
+The `showInDesigner` prop only controls component **visibility**, not **functionality**. Event listeners are still attached even when `showInDesigner={true}`, so clicks still trigger actions.
 
 **Solution:**
 
-Add environment detection to determine if the component is running in the Webflow Designer canvas:
+Use Webflow's official `useWebflowContext()` hook to detect the current environment:
 
 ```tsx
-// ✅ Detect Webflow Designer environment
-const isWebflowDesigner = (): boolean => {
-  if (typeof window === 'undefined') return false;
+import { useWebflowContext } from '@webflow/react';
 
-  const inIframe = window.self !== window.top;
-  const webflowDomain = window.location.hostname.includes('webflow.com') ||
-                         window.location.hostname.includes('webflow.io');
+export const Modal = ({ id, showInDesigner }: Props) => {
+  const { mode } = useWebflowContext();
 
-  return inIframe && webflowDomain;
-};
+  // mode === 'design' in Designer canvas
+  // mode === 'preview' in Designer preview
+  // mode is undefined on published site
 
-export const Modal = ({ previewMode }: Props) => {
-  const [isDesigner, setIsDesigner] = useState(false);
+  const isInDesignerCanvas = mode === 'design';
 
-  // Detect environment on mount
+  // Disable event listeners in Designer canvas
   useEffect(() => {
-    setIsDesigner(isWebflowDesigner());
-  }, []);
-
-  // Disable event listeners in Designer
-  useEffect(() => {
-    if (isDesigner) return;  // ✅ Don't attach listeners in Designer
+    if (isInDesignerCanvas) return; // ✅ Don't attach listeners in canvas
 
     const handleTriggerClick = (e: MouseEvent) => {
-      // Handle trigger clicks
+      const trigger = e.target.closest(`[data-modal-trigger="${id}"]`);
+      if (trigger) openModal();
     };
 
     document.addEventListener('click', handleTriggerClick);
     return () => document.removeEventListener('click', handleTriggerClick);
-  }, [isDesigner]);
+  }, [id, isInDesignerCanvas]);
 
-  // Modal visible in Designer (previewMode), but interactions disabled
-  return <div style={{ display: previewMode ? 'block' : 'none' }}>...</div>;
+  return <div>...</div>;
 };
 ```
 
@@ -632,12 +611,19 @@ export const Modal = ({ previewMode }: Props) => {
 - Scroll blocking
 - Any user-triggered state changes
 
+**Key benefits:**
+- ✅ Official Webflow API designed for this use case
+- ✅ Component automatically re-renders when mode changes
+- ✅ No manual URL checking or polling needed
+- ✅ Works consistently in Canvas, Preview, and Published pages
+
 **How to test:**
-1. Add environment detection to your component
-2. Add guards to all event listeners: `if (isDesigner) return;`
+1. Import `useWebflowContext` from `@webflow/react`
+2. Add guards to all event listeners: `if (mode === 'design') return;`
 3. Run `npx webflow library share`
-4. In Designer, click trigger elements - they should be selectable/editable
-5. On published site, triggers should work normally
+4. In Designer canvas, click trigger elements - they should be selectable/editable
+5. In Designer preview mode, triggers should work
+6. On published site, triggers should work normally
 
 **See also:**
 - [Best Practices - Designer Environment Detection](./best-practices.md#designer-environment-detection)

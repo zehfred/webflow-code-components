@@ -21,6 +21,8 @@ Trigger this skill when users are:
 - Optimizing component performance or bundle size
 - Working with wrapper components for complex prop types
 - Using Webflow hooks like `useWebflowContext`
+- Managing the Webflow site using Designer MCP tools (if available)
+- Adding or editing content on Webflow pages programmatically
 
 ## Core Concepts
 
@@ -353,6 +355,109 @@ npx webflow library log
 
 **For complete CLI reference, webpack configuration, CSS Modules setup, and CI/CD integration, refer to `references/cli-reference.md`.**
 
+## Webflow Designer MCP (Optional)
+
+**Note:** Webflow Designer MCP tools may not be available in all environments. Always check for tool availability before attempting to use them.
+
+### Availability Check
+
+```typescript
+// Check if Webflow MCP tools are available
+const hasWebflowMCP = typeof mcp__webflow__sites_list === 'function';
+
+if (!hasWebflowMCP) {
+  // MCP tools not available - use alternative approach
+  console.log('Webflow Designer MCP not available');
+}
+```
+
+### What Are Designer MCP Tools?
+
+Model Context Protocol (MCP) tools for Webflow Designer allow you to programmatically:
+
+- Access and navigate Webflow sites and pages
+- Create and modify page elements
+- Manage CMS collections and content
+- Publish site changes
+- Add content to component showcase pages
+
+**Use cases:**
+- Adding descriptive content to component demo pages
+- Updating page content programmatically
+- Managing CMS data for components
+- Bulk content operations across pages
+
+### Connection Workflow
+
+1. **Check tool availability** (see above)
+2. **Get site information:**
+   ```typescript
+   const { sites } = await mcp__webflow__sites_list();
+   const site = sites.find(s => s.displayName === 'My Site');
+   ```
+
+3. **Provide connection link to user:**
+   ```markdown
+   Click this link to connect:
+   [Launch Webflow Designer](https://{shortName}.design.webflow.com?app={appId})
+   ```
+
+4. **Wait for user confirmation** that Designer is connected
+
+5. **Navigate and make changes:**
+   ```typescript
+   // Switch to page
+   await mcp__webflow__de_page_tool({
+     siteId: site.id,
+     actions: [{ switch_page: { page_id: pageId } }]
+   });
+
+   // Ask user to select target element
+   // User MUST manually select in Designer
+
+   // Create content
+   await mcp__webflow__element_builder({
+     siteId: site.id,
+     actions: [{
+       parent_element_id: selectedElementId,
+       creation_position: "append",
+       element_schema: {
+         type: "Paragraph",
+         set_text: { text: "Content here" }
+       }
+     }]
+   });
+   ```
+
+### Critical Requirements
+
+**User must manually select elements:**
+- For operations that target specific elements, user must select them in Designer first
+- Always ask user to select element, then confirm before proceeding
+- Example: "Please select the `section-inner--about` section, then let me know when ready"
+
+**Connection can drop:**
+- Long operations may lose connection
+- Ask user to reconnect if errors occur
+- Provide fresh connection link when needed
+
+**Element creation is sequential:**
+- Each element operation is separate
+- Creating multiple elements takes time
+- Batch operations in logical groups
+
+### Quick Reference
+
+**Common tasks:**
+- List sites: `mcp__webflow__sites_list()`
+- List pages: `mcp__webflow__pages_list({ site_id })`
+- Switch page: `mcp__webflow__de_page_tool({ siteId, actions: [{ switch_page }] })`
+- Get selected: `mcp__webflow__element_tool({ siteId, actions: [{ get_selected_element }] })`
+- Create element: `mcp__webflow__element_builder({ siteId, actions: [...] })`
+- Publish: `mcp__webflow__sites_publish({ site_id })`
+
+**For complete Designer MCP documentation, patterns, troubleshooting, and API reference, refer to `references/webflow-designer-mcp.md`.**
+
 ## Troubleshooting Quick Reference
 
 ### Components Don't Appear
@@ -441,6 +546,7 @@ Use these references for detailed information:
 - **`references/component-communication.md`** - State sharing patterns
 - **`references/data-fetching.md`** - API integration, caching, requests
 - **`references/cli-reference.md`** - All CLI commands and options
+- **`references/webflow-designer-mcp.md`** - Webflow Designer MCP tools (if available)
 - **`references/best-practices.md`** - Comprehensive recommendations
 - **`references/troubleshooting.md`** - Common issues and solutions
 

@@ -684,14 +684,14 @@ useEffect(() => {
 }, []);
 ```
 
-### Why `previewMode` Prop Isn't Enough
+### Why `showInDesigner` Prop Isn't Enough
 
-Many components have a `previewMode` prop to show the component in the Designer for editing. However, this only controls **visibility**, not **functionality**:
+Many components have a `showInDesigner` prop to show the component in the Designer for editing. However, this only controls **visibility**, not **functionality**:
 
 ```tsx
-// ❌ PreviewMode shows modal, but interactions still work
+// ❌ showInDesigner shows modal, but interactions still work
 interface Props {
-  previewMode?: boolean;  // Controls display only
+  showInDesigner?: boolean;  // Controls display only
 }
 
 // Modal is visible for editing, BUT:
@@ -700,151 +700,94 @@ interface Props {
 // - Designers get trapped
 ```
 
-### The Solution: Environment Detection
+### The Solution: useWebflowContext Hook
 
-Detect if your component is running inside the Webflow Designer canvas iframe:
-
-```typescript
-// ✅ Detect Webflow Designer environment
-const isWebflowDesigner = (): boolean => {
-  if (typeof window === 'undefined') return false;
-
-  // Check if in iframe AND on Webflow domains
-  const inIframe = window.self !== window.top;
-  const webflowDomain = window.location.hostname.includes('webflow.com') ||
-                         window.location.hostname.includes('webflow.io');
-
-  return inIframe && webflowDomain;
-};
-```
-
-**How it works:**
-- `window.self !== window.top` - Detects if code is running in an iframe
-- Hostname check - Confirms it's a Webflow domain (not user's published site in an iframe)
-- Returns `true` only in Webflow Designer canvas
-
-### Implementation Pattern
-
-Add environment detection to your component:
+Use Webflow's official `useWebflowContext()` hook to detect the current environment:
 
 ```tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useWebflowContext } from '@webflow/react';
 
-// Detection utility
-const isWebflowDesigner = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const inIframe = window.self !== window.top;
-  const webflowDomain = window.location.hostname.includes('webflow.com') ||
-                         window.location.hostname.includes('webflow.io');
-  return inIframe && webflowDomain;
-};
+export const Modal = ({ id, showInDesigner }: ModalProps) => {
+  const { mode } = useWebflowContext();
 
-export const Modal = ({ id, previewMode, ...props }: ModalProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDesigner, setIsDesigner] = useState(false);
+  // Detect current environment
+  const isInDesignerCanvas = mode === 'design';
+  const isInPreviewMode = mode === 'preview';
 
-  // Detect environment on mount
+  // Disable interactions in Designer canvas
   useEffect(() => {
-    setIsDesigner(isWebflowDesigner());
-  }, []);
+    if (isInDesignerCanvas) return; // ✅ Don't attach listeners
 
-  // Disable interactions in Designer
-  const openModal = useCallback(() => {
-    if (isDesigner) return;  // ✅ No-op in Designer
-    setIsOpen(true);
-  }, [isDesigner]);
-
-  // Disable event listeners in Designer
-  useEffect(() => {
-    if (isDesigner) return;  // ✅ Don't attach listeners
-
-    const handleClick = (e: MouseEvent) => {
+    const handleTriggerClick = (e: MouseEvent) => {
       const trigger = e.target.closest(`[data-modal-trigger="${id}"]`);
       if (trigger) openModal();
     };
 
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, [id, openModal, isDesigner]);
+    document.addEventListener('click', handleTriggerClick);
+    return () => document.removeEventListener('click', handleTriggerClick);
+  }, [id, isInDesignerCanvas]);
 
-  // Modal still visible in Designer for editing (if previewMode=true)
-  // But all interactions are disabled
   return <div>...</div>;
 };
 ```
 
-### What to Disable
+### Available Modes
 
-When `isDesigner` is true, disable:
+The `mode` property from `useWebflowContext()` returns:
+- `"design"` - Designer canvas/edit mode (block interactions)
+- `"preview"` - Designer preview mode (allow interactions)
+- `"build"`, `"edit"`, `"publish"`, `"comment"`, `"analyze"` - Other modes
+- `undefined` - Published site (allow interactions)
 
-```tsx
-// ✅ Disable all these in Designer
-- Event listeners (click, keydown, scroll, etc.)
-- Modal/dropdown opening functions
-- URL hash changes
-- Focus trapping
-- Scroll blocking
-- Any state changes triggered by user interaction
-```
+### What to Disable in Designer Canvas
+
+When `mode === 'design'`:
+- ✅ Disable event listeners (click, keydown, scroll)
+- ✅ Disable user-triggered actions
+- ✅ Disable focus trapping
+- ✅ Disable scroll blocking
+- ✅ Disable URL hash changes
 
 ### What NOT to Disable
 
-Keep these working in Designer:
-
-```tsx
-// ✅ Keep these working for editing
-- Component rendering (designers need to see it)
-- PreviewMode visibility (for content editing)
-- Static styling
-- Layout
-- CSS animations/transitions
-```
+Keep working for editing:
+- ✅ Component rendering
+- ✅ `showInDesigner` visibility control
+- ✅ Static styling
+- ✅ Layout
+- ✅ CSS animations/transitions
 
 ### Complete Example
 
-Based on the Modal component implementation:
+Full implementation with `useWebflowContext()`:
 
 ```tsx
-const isWebflowDesigner = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const inIframe = window.self !== window.top;
-  const webflowDomain = window.location.hostname.includes('webflow.com') ||
-                         window.location.hostname.includes('webflow.io');
-  return inIframe && webflowDomain;
-};
+import { useState, useEffect } from 'react';
+import { useWebflowContext } from '@webflow/react';
 
-export const Modal: React.FC<ModalProps> = ({
-  id,
-  previewMode = false,
-  closeOnEscape = true,
-  ...props
-}) => {
+export const Modal = ({ id, showInDesigner }: ModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDesigner, setIsDesigner] = useState(false);
+  const { mode } = useWebflowContext();
 
-  // Detect environment once on mount
-  useEffect(() => {
-    setIsDesigner(isWebflowDesigner());
-  }, []);
+  const isInDesignerCanvas = mode === 'design';
 
-  // Functions with Designer guards
-  const openModal = useCallback(() => {
-    if (isDesigner) return;
+  // Open/close functions (auto-blocked in canvas)
+  const openModal = () => {
+    if (isInDesignerCanvas) return;
     setIsOpen(true);
-  }, [isDesigner]);
+  };
 
-  const closeModal = useCallback(() => {
-    if (isDesigner) return;
+  const closeModal = () => {
+    if (isInDesignerCanvas) return;
     setIsOpen(false);
-  }, [isDesigner]);
+  };
 
-  // Trigger click handler - disabled in Designer
+  // Trigger clicks - disabled in canvas
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-    if (isDesigner) return;  // No listeners in Designer
+    if (isInDesignerCanvas) return;
 
     const handleClick = (e: MouseEvent) => {
-      const trigger = (e.target as HTMLElement).closest(`[data-modal-trigger="${id}"]`);
+      const trigger = e.target.closest(`[data-modal-trigger="${id}"]`);
       if (trigger) {
         e.preventDefault();
         openModal();
@@ -853,27 +796,11 @@ export const Modal: React.FC<ModalProps> = ({
 
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
-  }, [id, openModal, isDesigner]);
+  }, [id, isInDesignerCanvas]);
 
-  // Close button handler - disabled in Designer
+  // ESC key - disabled in canvas
   useEffect(() => {
-    if (!isOpen || typeof document === 'undefined') return;
-    if (isDesigner) return;
-
-    const handleCloseClick = (e: MouseEvent) => {
-      const closeBtn = (e.target as HTMLElement).closest('[data-modal-close]');
-      if (closeBtn) closeModal();
-    };
-
-    document.addEventListener('click', handleCloseClick);
-    return () => document.removeEventListener('click', handleCloseClick);
-  }, [isOpen, closeModal, isDesigner]);
-
-  // Escape key handler - disabled in Designer
-  useEffect(() => {
-    if (!isOpen || !closeOnEscape) return;
-    if (typeof document === 'undefined') return;
-    if (isDesigner) return;
+    if (!isOpen || isInDesignerCanvas) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeModal();
@@ -881,10 +808,10 @@ export const Modal: React.FC<ModalProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, closeOnEscape, closeModal, isDesigner]);
+  }, [isOpen, isInDesignerCanvas]);
 
-  // Show modal in Designer (previewMode) or when open
-  const shouldShow = previewMode || isOpen;
+  // Show in designer or when open
+  const shouldShow = showInDesigner || isOpen;
 
   return (
     <div style={{ display: shouldShow ? 'block' : 'none' }}>
@@ -894,20 +821,37 @@ export const Modal: React.FC<ModalProps> = ({
 };
 ```
 
+### Key Benefits
+
+**Official API:**
+- ✅ Built specifically for mode detection
+- ✅ Maintained by Webflow
+- ✅ Automatically updates on mode changes
+
+**Automatic Reactivity:**
+- ✅ Component re-renders when mode changes
+- ✅ No manual polling or URL checking
+- ✅ No stale closure issues
+
+**Simple & Reliable:**
+- ✅ One line to detect mode
+- ✅ Works in Canvas, Preview, and Published
+- ✅ Much cleaner than iframe detection
+
 ### Key Takeaways
 
 **Do:**
-- ✅ Always detect Designer environment for interactive components
-- ✅ Disable ALL event listeners when in Designer
-- ✅ Disable ALL user-triggered actions when in Designer
-- ✅ Keep `previewMode` for showing components during editing
-- ✅ Add `isDesigner` to useEffect/useCallback dependencies
+- ✅ Use `useWebflowContext()` for mode detection
+- ✅ Check `mode === 'design'` to detect canvas
+- ✅ Disable ALL event listeners when in canvas
+- ✅ Keep `showInDesigner` for visibility control
+- ✅ Add `isInDesignerCanvas` to useEffect dependencies
 
 **Don't:**
-- ❌ Don't rely only on `previewMode` prop for behavior control
-- ❌ Don't forget to guard helper functions (`openModal`, `closeModal`, etc.)
+- ❌ Don't use iframe detection or URL polling
+- ❌ Don't rely only on `showInDesigner` for behavior
 - ❌ Don't disable rendering/styling in Designer
-- ❌ Don't forget to add guards to hash changes, scroll blocking, etc.
+- ❌ Don't forget to guard helper functions
 
 ## Testing
 

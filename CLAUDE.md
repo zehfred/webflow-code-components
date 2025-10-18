@@ -238,3 +238,4 @@ Particles uses OGL for 3D rendering:
 - **Production build**: Components bundle separately for Webflow
 - **Hot reload**: Works in development mode
 - **TypeScript**: Mixed JS/TS codebase (`.tsx` for components, `.js` for App)
+- When using the "Ask Webflow AI" tool, send small questions to prevent excessive context token usage.

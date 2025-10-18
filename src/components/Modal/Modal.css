@@ -1,0 +1,171 @@
+/* ═══════════════════════════════════════════════════════════════
+ * Modal Component Styles
+ * ═══════════════════════════════════════════════════════════════
+ * These styles are scoped to the Modal component's Shadow DOM
+ * and provide the backdrop, modal container, and close button.
+ */
+
+/* Backdrop overlay */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Backdrop visual layer */
+.modal-backdrop::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--backdrop-color);
+  backdrop-filter: blur(var(--backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+  pointer-events: none;
+  animation: fadeIn var(--animation-duration) ease-out;
+}
+
+.modal-backdrop.closing::before {
+  animation: fadeOut var(--animation-duration) ease-out;
+}
+
+/* Modal container */
+.modal-container {
+  background: var(--modal-bg);
+  max-width: var(--modal-max-width);
+  max-height: var(--modal-max-height);
+  width: 90%;
+  padding: var(--modal-padding);
+  border-radius: var(--modal-radius);
+  position: relative;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+              0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: fadeInScale var(--animation-duration) ease-out;
+  /* Ensure modal appears above backdrop pseudo-element */
+  z-index: 1;
+  opacity: 1;
+}
+
+.modal-container.closing {
+  animation: fadeOutScale calc(var(--animation-duration) * 0.5) ease-out;
+  animation-fill-mode: forwards;
+  visibility: hidden;
+}
+
+/* Close button - positioned on backdrop, not modal */
+.modal-close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--close-bg-color);
+  border: none;
+  color: var(--close-color);
+  cursor: pointer;
+  padding: var(--close-padding);
+  width: var(--close-size);
+  height: var(--close-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: var(--close-border-radius);
+  z-index: 10000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: fadeIn var(--animation-duration) ease-out;
+}
+
+.modal-backdrop.closing .modal-close {
+  animation: fadeOut var(--animation-duration) ease-out;
+}
+
+.modal-close:hover {
+  color: var(--close-hover-color);
+  background: var(--close-hover-bg-color);
+  transform: scale(1.05);
+}
+
+.modal-close svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.modal-close svg line {
+  stroke-width: var(--close-stroke-width);
+}
+
+.modal-close:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Modal content area */
+.modal-content {
+  /* Content is rendered via slot/children */
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOutScale {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop,
+  .modal-container {
+    animation: none;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .modal-container {
+    width: 95%;
+    max-height: 95vh;
+  }
+}

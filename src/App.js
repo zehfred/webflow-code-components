@@ -5,6 +5,7 @@ import Particles from './components/Particles/Particles.tsx';
 import MagnetLines from './components/MagnetLines/MagnetLines.tsx';
 import GridMotion from './components/GridMotion/GridMotion.tsx';
 import FAQ from './components/FAQ/FAQ.tsx';
+import Modal from './components/Modal/Modal.tsx';
 
 // Component Registry - Add new components here
 const componentRegistry = [
@@ -357,6 +358,71 @@ const componentRegistry = [
       },
     },
   },
+  {
+    name: 'Modal',
+    component: Modal,
+    wrapperStyle: { width: '100%', minHeight: '400px', position: 'relative' },
+    props: {
+      id: {
+        type: 'text',
+        name: 'Modal ID',
+        defaultValue: 'demo-modal',
+      },
+      showInDesigner: {
+        type: 'boolean',
+        name: 'Show in Designer',
+        defaultValue: false,
+      },
+      animationDuration: {
+        type: 'number',
+        name: 'Animation Duration',
+        defaultValue: 0.3,
+        min: 0.1,
+        max: 2,
+        step: 0.1,
+      },
+      backgroundColor: {
+        type: 'color',
+        name: 'Background Color',
+        defaultValue: '#ffffff',
+      },
+      maxWidth: {
+        type: 'text',
+        name: 'Max Width',
+        defaultValue: '600px',
+      },
+      padding: {
+        type: 'text',
+        name: 'Padding',
+        defaultValue: '32px',
+      },
+      borderRadius: {
+        type: 'text',
+        name: 'Border Radius',
+        defaultValue: '8px',
+      },
+      backdropColor: {
+        type: 'text',
+        name: 'Backdrop Color',
+        defaultValue: 'rgba(0, 0, 0, 0.5)',
+      },
+      closeButtonColor: {
+        type: 'color',
+        name: 'Close Button Color',
+        defaultValue: '#666666',
+      },
+      closeButtonSize: {
+        type: 'text',
+        name: 'Close Button Size',
+        defaultValue: '32px',
+      },
+      closeButtonHoverColor: {
+        type: 'color',
+        name: 'Close Hover Color',
+        defaultValue: '#000000',
+      },
+    },
+  },
   // Add more components here as they are created
 ];
 
@@ -588,6 +654,22 @@ const sampleFAQItems = (
   </div>
 );
 
+// Sample Modal content for testing
+const sampleModalContent = (
+  <div>
+    <h2 style={{ marginTop: 0, marginBottom: '16px' }}>Welcome to Our Modal</h2>
+    <p style={{ marginBottom: '16px' }}>
+      This is a sample modal dialog. You can add any content here including text, images, forms, and other elements.
+    </p>
+    <p style={{ marginBottom: '24px', color: '#666' }}>
+      Try adjusting the controls below to see how the modal appearance changes. Toggle "Show in Designer" to hide the modal and see your page normally.
+    </p>
+    <button style={{ padding: '10px 20px', backgroundColor: '#5227FF', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+      Sample Button
+    </button>
+  </div>
+);
+
 // Component Showcase Item
 const ComponentShowcase = ({ config }) => {
   const { name, component: Component, props: propDefs, wrapperStyle } = config;
@@ -632,6 +714,8 @@ const ComponentShowcase = ({ config }) => {
         <div style={wrapperStyle || { width: '100%' }}>
           {name === 'FAQ' ? (
             <Component {...propValues}>{sampleFAQItems}</Component>
+          ) : name === 'Modal' ? (
+            <Component {...propValues}>{sampleModalContent}</Component>
           ) : (
             <Component {...propValues} />
           )}
