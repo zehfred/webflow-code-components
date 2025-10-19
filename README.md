@@ -73,6 +73,7 @@ This library includes the following components. Click each link to view detailed
 ### UI Components
 
 - **[FAQ](src/components/FAQ/README.md)** - Accessible accordion component with Collection List support and full keyboard navigation
+- **[Modal](src/components/Modal/README.md)** - Centered modal dialog with trigger-based opening, backdrop overlay, and full accessibility support
 
 ## AI-Powered Development with Claude Code
 
