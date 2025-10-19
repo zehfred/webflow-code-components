@@ -11,6 +11,10 @@ Accessible accordion component for FAQs with Collection List integration and com
 - **Comprehensive styling props** with CSS variables support
 - **Respects prefers-reduced-motion**
 
+## Live Demo
+
+[View live demo →](https://webflow-code-components.webflow.io/components/faq-component)
+
 ## Props
 
 ### Behavior Props

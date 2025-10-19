@@ -11,6 +11,10 @@ Interactive 4×7 tilted image grid that reacts to mouse movement with GSAP anima
 - **Smooth GSAP animations** with configurable duration
 - **Auto-repeat images** if fewer than 28 provided
 
+## Live Demo
+
+[View live demo →](https://webflow-code-components.webflow.io/components/image-grid-component)
+
 ## Props
 
 | Prop | Type | Default | Description |

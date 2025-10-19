@@ -10,6 +10,10 @@ Grid of lines that rotate to point at the cursor position like magnetic needles,
 - **Performance optimized** - mouse enter/leave tracking
 - **Responsive design** - works at any screen size
 
+## Live Demo
+
+[View live demo →](https://webflow-code-components.webflow.io/components/magnetic-lines-component)
+
 ## Props
 
 | Prop | Type | Default | Description |

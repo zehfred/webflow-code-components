@@ -12,6 +12,10 @@ WebGL particle system with customizable colors, animations, and interactive mous
 - **Size randomness** - natural particle distribution
 - **Customizable camera** - adjustable distance/perspective
 
+## Live Demo
+
+[View live demo →](https://webflow-code-components.webflow.io/components/particles-component)
+
 ## Props
 
 | Prop | Type | Default | Description |

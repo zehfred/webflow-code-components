@@ -13,6 +13,10 @@ A centered modal dialog component that opens when clicking trigger elements. Fea
 - **Accessibility**: Full keyboard navigation, ARIA labels, and screen reader support
 - **Smooth animations**: Fade in/out transitions with reduced motion support
 
+## Live Demo
+
+[View live demo →](https://webflow-code-components.webflow.io/components/modal-component)
+
 ## Props
 
 | Prop | Type | Default | Description |

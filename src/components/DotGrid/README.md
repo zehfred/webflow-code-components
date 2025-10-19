@@ -10,6 +10,10 @@ Interactive dot grid background with mouse tracking and physics-based animations
 - **Customizable appearance** via props
 - **Smooth return animations** when mouse leaves
 
+## Live Demo
+
+[View live demo →](https://webflow-code-components.webflow.io/components/dot-grid-component)
+
 ## Props
 
 | Prop | Type | Default | Description |
