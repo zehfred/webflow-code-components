@@ -33,31 +33,24 @@ npm install
    - **Recommended**: Use interactive CLI authentication when running `npx webflow library share` (CLI will open your browser)
    - **Alternative**: Create a `.env` file in the project root and add your Webflow API token: `WEBFLOW_WORKSPACE_API_TOKEN=your_token_here`
 
-### Local Development
+### Publishing to Webflow
 
-Start the development server to preview all components in an interactive showcase:
+#### Authentication
 
-```bash
-npm start
-```
+You have two options for authenticating with Webflow:
 
-This opens a local gallery at `http://localhost:3000` where you can test components with live prop controls.
+1. **Interactive (Recommended)**: Run `npx webflow library share` and the CLI will open your browser for authentication
+2. **Manual**: Set `WEBFLOW_WORKSPACE_API_TOKEN` in your `.env` file (requires Workspace Admin permissions)
 
-### Build
+#### Share Components
 
-Create a production bundle:
-
-```bash
-npm run build
-```
-
-### Testing
-
-Run the test suite:
+Publish components to your Webflow workspace:
 
 ```bash
-npm test
+npx webflow library share
 ```
+
+Components will appear in your Webflow Designer under "Code Components" in the Add panel.
 
 ## Available Components
 
@@ -106,25 +99,6 @@ To use these tools with Claude Code:
 
 This setup dramatically speeds up component development by giving Claude deep context about Webflow's requirements, best practices, and the ability to directly interact with your Webflow projects.
 
-## Publishing to Webflow
-
-### Authentication
-
-You have two options for authenticating with Webflow:
-
-1. **Interactive (Recommended)**: Run `npx webflow library share` and the CLI will open your browser for authentication
-2. **Manual**: Set `WEBFLOW_WORKSPACE_API_TOKEN` in your `.env` file (requires Workspace Admin permissions)
-
-### Share Components
-
-Publish components to your Webflow workspace:
-
-```bash
-npx webflow library share
-```
-
-Components will appear in your Webflow Designer under "Code Components" in the Add panel.
-
 ## Component Structure
 
 Each component in this library follows a consistent structure:
@@ -151,8 +125,7 @@ Contributions are welcome! When adding new components:
 2. Use the Claude skill for guidance on Webflow patterns
 3. Convert Tailwind CSS to standard CSS (components must work in Shadow DOM)
 4. Include comprehensive README documentation
-5. Add component to `src/App.js` for local testing
-6. Test in both local showcase and Webflow Designer
+5. Test in both local showcase and Webflow Designer
 
 ## License
 

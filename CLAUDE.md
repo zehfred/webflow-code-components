@@ -57,10 +57,6 @@ src/components/ComponentName/
    - Browser-only APIs (window, document)
    - Mouse/pointer event tracking
 
-4. **Component Registry**: `src/App.js` contains `componentRegistry` array for the local showcase
-   - Add new components here with their props schema
-   - Provides interactive prop controls for testing
-
 ### Component Communication
 
 Since Shadow DOM isolates components:
@@ -177,8 +173,7 @@ New components typically follow one of two paths:
    - Usage example
    - Styling approach (CSS variables, props, etc.)
    - Technical notes (SSR, browser APIs, performance considerations)
-7. Add to `componentRegistry` in `src/App.js` for local testing
-8. Run `npx webflow library share` to publish
+7. Run `npx webflow library share` to publish
 
 ## Claude Skill Available
 
