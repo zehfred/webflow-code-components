@@ -104,14 +104,13 @@ interface FAQWebflowProps {
   type?: 'Single' | 'Multiple';
   /** Which item is open by default (0 = none, 1 = first, 2 = second, etc.) */
   defaultOpenIndex?: number;
-  /** Custom icon image URL */
-  icon?: string;
   /** Animation speed in seconds */
   animationDuration?: number;
 
   // Style props
   iconWidth?: string;
   iconHeight?: string;
+  chevronColor?: string;
   borderColor?: string;
   borderWidth?: string;
   borderRadius?: string;
@@ -132,10 +131,10 @@ const FAQWebflow = ({
   children,
   type = 'Single',
   defaultOpenIndex = 0,
-  icon,
   animationDuration = 0.3,
   iconWidth,
   iconHeight,
+  chevronColor,
   borderColor,
   borderWidth,
   borderRadius,
@@ -164,10 +163,10 @@ const FAQWebflow = ({
     <FAQ
       type={parsedType}
       defaultOpenIndex={parsedDefaultIndex}
-      icon={icon}
       animationDuration={parsedDuration}
       iconWidth={iconWidth}
       iconHeight={iconHeight}
+      chevronColor={chevronColor}
       borderColor={borderColor}
       borderWidth={borderWidth}
       borderRadius={borderRadius}
@@ -235,25 +234,26 @@ export default declareComponent(FAQWebflow, {
       tooltip: 'Gap between FAQ items (e.g., 8px or var(--space-2))'
     }),
 
-    // ICON GROUP
-    icon: props.Image({
-      name: 'Icon',
-      group: 'Icon',
-      tooltip: 'Custom icon image for expand/collapse indicator'
+    // CHEVRON GROUP
+    chevronColor: props.Text({
+      name: 'Chevron Color',
+      defaultValue: 'currentColor',
+      group: 'Chevron',
+      tooltip: 'Color of the chevron icon (e.g., #000000 or var(--icon-color))'
     }),
 
     iconWidth: props.Text({
-      name: 'Icon Width',
+      name: 'Chevron Width',
       defaultValue: '24px',
-      group: 'Icon',
-      tooltip: 'Width of the icon (e.g., 24px or var(--icon-size))'
+      group: 'Chevron',
+      tooltip: 'Width of the chevron icon (e.g., 24px or var(--icon-size))'
     }),
 
     iconHeight: props.Text({
-      name: 'Icon Height',
+      name: 'Chevron Height',
       defaultValue: '24px',
-      group: 'Icon',
-      tooltip: 'Height of the icon (e.g., 24px or var(--icon-size))'
+      group: 'Chevron',
+      tooltip: 'Height of the chevron icon (e.g., 24px or var(--icon-size))'
     }),
 
     // BORDERS GROUP

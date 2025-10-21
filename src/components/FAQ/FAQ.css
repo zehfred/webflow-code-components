@@ -83,13 +83,7 @@
   margin-left: auto;
   margin-right: 1rem;
   transition: transform 0.3s ease;
-}
-
-/* Custom icon image */
-.faq__icon-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  color: var(--faq-chevron-color, currentColor);
 }
 
 /* Rotate icon when item is open */

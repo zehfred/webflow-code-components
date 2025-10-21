@@ -12,18 +12,18 @@ export interface FAQProps {
   type?: 'single' | 'multiple';
   /** Index of item to open by default (0 = none, 1 = first, 2 = second, etc.) */
   defaultOpenIndex?: number;
-  /** Custom icon image URL for the expand/collapse indicator */
-  icon?: string;
   /** Animation duration in seconds */
   animationDuration?: number;
   /** Children slot for Collection List */
   children?: any;
 
-  // Style Props - Icon
-  /** Icon width (e.g., 24px or var(--icon-size)) */
+  // Style Props - Chevron
+  /** Chevron icon width (e.g., 24px or var(--icon-size)) */
   iconWidth?: string;
-  /** Icon height (e.g., 24px or var(--icon-size)) */
+  /** Chevron icon height (e.g., 24px or var(--icon-size)) */
   iconHeight?: string;
+  /** Chevron icon color (e.g., #000000 or var(--icon-color)) */
+  chevronColor?: string;
 
   // Style Props - Borders
   /** Border color for FAQ items (e.g., #e5e5e5 or var(--border-color)) */
@@ -65,12 +65,12 @@ export interface FAQProps {
 const FAQ = ({
   type = 'single',
   defaultOpenIndex = 0,
-  icon,
   animationDuration = 0.3,
   children,
   // Style props with defaults
   iconWidth = '24px',
   iconHeight = '24px',
+  chevronColor = 'currentColor',
   borderColor = '#e5e5e5',
   borderWidth = '1px',
   borderRadius = '0px',
@@ -240,6 +240,7 @@ const FAQ = ({
       style={{
         '--faq-icon-width': iconWidth,
         '--faq-icon-height': iconHeight,
+        '--faq-chevron-color': chevronColor,
         '--faq-border-color': borderColor,
         '--faq-border-width': borderWidth,
         '--faq-border-radius': borderRadius,
@@ -313,7 +314,9 @@ const FAQ = ({
                   }}
                 >
                   <span className="faq__icon" aria-hidden="true">
-                    <img src={icon} alt="" className="faq__icon-image" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
                   </span>
                 </button>
 
