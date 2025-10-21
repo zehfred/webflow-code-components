@@ -27,13 +27,13 @@ Accessible accordion component for FAQs with Collection List integration and com
 | `itemGap` | string | '0px' | Gap between FAQ items |
 | `children` | slot | - | Collection List with FAQ items |
 
-### Icon Props
+### Chevron Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `icon` | string | - | Custom icon image URL for expand/collapse indicator |
-| `iconWidth` | string | '24px' | Width of the icon |
-| `iconHeight` | string | '24px' | Height of the icon |
+| `chevronColor` | string | 'currentColor' | Color of the chevron icon |
+| `iconWidth` | string | '24px' | Width of the chevron icon |
+| `iconHeight` | string | '24px' | Height of the chevron icon |
 
 ### Border Props
 
@@ -87,7 +87,7 @@ import FAQ from './components/FAQ';
   type="single"
   defaultOpenIndex={1}
   animationDuration={0.3}
-  icon="https://example.com/chevron.svg"
+  chevronColor="var(--icon-color)"
   borderColor="var(--border-color)"
   borderWidth="1px"
   borderRadius="8px"
@@ -115,7 +115,7 @@ All styling is controlled through **component props** in Webflow Designer. Each 
 
 The component sets these CSS variables dynamically from props:
 
-- `--faq-icon-width`, `--faq-icon-height`
+- `--faq-icon-width`, `--faq-icon-height`, `--faq-chevron-color`
 - `--faq-border-color`, `--faq-border-width`, `--faq-border-radius`
 - `--faq-hover-color`
 - `--faq-question-color`, `--faq-question-font-size`, `--faq-question-font-family`, `--faq-question-font-weight`
