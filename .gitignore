@@ -27,3 +27,6 @@ webflow.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Private components (not committed to public repo)
+/src/components/_*/

@@ -140,6 +140,28 @@ Use `@webflow/data-types` for Webflow prop declarations:
 
 ## Adding New Components
 
+### Public vs. Private Components
+
+This repository supports both **public components** (committed and shared with users) and **private components** (local development only, not committed).
+
+**Component Naming Convention:**
+- **Public components**: Standard naming (e.g., `FAQ`, `DotGrid`, `Particles`)
+- **Private components**: Prefix with underscore (e.g., `_MyWidget`, `_ClientProject`, `_AcmeComponent`)
+
+**Private Component Behavior:**
+- Components in folders starting with `_` are gitignored and will NOT be committed to the public repo
+- These components work normally in local development (`npm start`)
+- They can be published to Webflow with `npx webflow library share` from your local machine
+- Private components exist only on your local machine unless you back them up separately
+
+**When to create private components:**
+- Client-specific work that shouldn't be public
+- Experimental components not ready for public release
+- Components with proprietary business logic
+- Personal projects or custom implementations
+
+**IMPORTANT for Claude Code:** When the user requests a private, client, or non-public component, automatically use the `_ComponentName` naming pattern (e.g., `_ClientWidget`, `_PrivateFeature`).
+
 ### Component Creation Workflows
 
 New components typically follow one of two paths:
