@@ -1,0 +1,32 @@
+/* DecryptedText Component Styles */
+
+.decrypted-text-wrapper {
+  display: inline-block;
+  white-space: pre-wrap;
+}
+
+/* Screen reader only text (accessible but visually hidden) */
+.decrypted-text-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Revealed character styles */
+.decrypted-text-revealed {
+  color: var(--decrypted-text-color, inherit);
+  font-weight: var(--decrypted-text-font-weight, inherit);
+  transition: color 0.2s ease;
+}
+
+/* Encrypted/scrambled character styles */
+.decrypted-text-encrypted {
+  color: var(--encrypted-text-color, rgba(128, 128, 128, 0.7));
+  font-weight: var(--encrypted-text-font-weight, inherit);
+  transition: color 0.2s ease;
+}
